@@ -66,9 +66,6 @@ USE CATALOG paimon_catalog;
 CREATE DATABASE IF NOT EXISTS wikidb;
 
 USE wikidb;
-
--- 이후 테이블 DDL 및 INSERT 문 실행
--- 상세 SQL은 가이드 문서 섹션 5.6 ~ 5.7 참조
 ```
 
 ### 4. DuckDB에서 조회 (PyPaimon)
