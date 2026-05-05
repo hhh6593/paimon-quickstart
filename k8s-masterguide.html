@@ -1351,6 +1351,495 @@ img, svg { max-width: 100%; height: auto; }
   header.page { padding: 32px 0 32px; margin-bottom: 36px; }
 }
 </style>
+<style id="ferrari-v4-flow">
+/* ===========================================================
+ * v4 K8s ↔ EKS MAPPING CARDS (인라인 비교)
+ * =========================================================== */
+.eks-map {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 18px 0;
+  max-width: var(--content-w);
+  position: relative;
+}
+.eks-map::before {
+  content: "K8s vanilla ↔ EKS";
+  position: absolute;
+  top: -10px; left: 16px;
+  padding: 2px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--rosso-bright);
+  text-transform: uppercase;
+}
+.eks-map-cell {
+  padding: 14px 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.eks-map-cell.k8s { border-left: 3px solid #5fb3ff; }
+.eks-map-cell.eks { border-left: 3px solid #ff9900; }
+.eks-map-cell .lbl {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.eks-map-cell.k8s .lbl { color: #5fb3ff; }
+.eks-map-cell.eks .lbl { color: #ff9900; }
+.eks-map-cell h6 {
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.eks-map-cell p {
+  font-size: 13px; line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 4px 0;
+}
+.eks-map-cell code {
+  font-size: 11.5px;
+  background: rgba(225,6,0,0.08);
+  border-color: rgba(225,6,0,0.18);
+  color: var(--rosso-bright);
+}
+.eks-map-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--modena);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.eks-map-note::before { content: "🧭 "; font-style: normal; }
+@media (max-width: 720px) {
+  .eks-map { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* ===========================================================
+ * v4 K8S REAL-WORLD NETWORK FLOW STEPPER
+ * EKS prd-mpay 24-scene을 K8s 학습 관점으로 16 scene 압축
+ * Ferrari Rosso 테마, 외부 의존성 0
+ * =========================================================== */
+.kfs-flow {
+  background: var(--bg-elev);
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-md);
+  margin: 28px 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 1px var(--rosso-bright) inset, var(--shadow-rosso);
+}
+.kfs-head {
+  display: flex; align-items: stretch;
+  background: linear-gradient(135deg, rgba(225,6,0,0.12), rgba(255,242,0,0.04));
+  border-bottom: 1px solid var(--line);
+}
+.kfs-num {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 90px;
+  padding: 14px 12px;
+  background: var(--rosso-bright);
+  color: #fff;
+  font-family: var(--font-mono);
+}
+.kfs-num .n { font-size: 26px; font-weight: 800; line-height: 1; }
+.kfs-num .lab { font-size: 9px; letter-spacing: 0.2em; opacity: 0.85; margin-top: 4px; }
+.kfs-head-body { flex: 1; padding: 14px 18px; min-width: 0; }
+.kfs-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rosso-bright);
+  margin-bottom: 4px;
+}
+.kfs-tag::before { content: "▸"; }
+.kfs-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.kfs-analogy {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, rgba(255,242,0,0.10), transparent 80%);
+  border-left: 3px solid var(--modena);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.kfs-analogy::before {
+  content: "💡 ";
+  font-style: normal;
+}
+
+/* Body 2-column layout */
+.kfs-body { display: flex; align-items: stretch; min-height: 360px; }
+@media (max-width: 1024px) {
+  .kfs-body { flex-direction: column; }
+}
+
+/* Stage / SVG canvas */
+.kfs-stage {
+  flex: 1.4;
+  background: var(--bg-soft);
+  border-right: 1px solid var(--line);
+  position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 360px;
+  max-height: 520px;
+}
+@media (max-width: 1024px) {
+  .kfs-stage { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+.kfs-stage::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(225,6,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(225,6,0,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.kfs-canvas {
+  display: block;
+  width: 100%;
+  min-width: 1080px;
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+.kfs-node {
+  cursor: pointer;
+  transition: opacity 360ms ease, filter 200ms ease;
+  opacity: 0.32;
+}
+.kfs-node.on { opacity: 1; }
+.kfs-node:hover { filter: brightness(1.15); }
+.kfs-node-card {
+  fill: var(--bg-elev);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.kfs-node.on .kfs-node-card {
+  stroke: var(--rosso-bright);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(225,6,0,0.45));
+}
+.kfs-node-card.k8s { stroke: rgba(50,108,229,0.45); }
+.kfs-node-card.aws { stroke: rgba(255,153,0,0.55); }
+.kfs-node-card.istio { stroke: rgba(70,107,176,0.55); }
+.kfs-node-card.svc { stroke: rgba(67,214,138,0.55); }
+.kfs-node-head {
+  fill: rgba(225,6,0,0.04);
+}
+.kfs-node.on .kfs-node-head {
+  fill: rgba(225,6,0,0.18);
+}
+.kfs-node-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--ink);
+  pointer-events: none;
+  letter-spacing: -0.01em;
+}
+.kfs-node-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--ink-muted);
+  pointer-events: none;
+}
+.kfs-node-tag {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  fill: var(--rosso-bright);
+  pointer-events: none;
+  letter-spacing: 0.10em;
+}
+.kfs-node-tag.aws { fill: #ff9900; }
+.kfs-node-tag.k8s { fill: #5fb3ff; }
+.kfs-node-tag.istio { fill: #6a8acf; }
+.kfs-node-tag.svc { fill: #43d68a; }
+.kfs-zone-rect {
+  fill: rgba(225,6,0,0.02);
+  stroke: rgba(225,6,0,0.30);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 4;
+}
+.kfs-zone-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--rosso-bright);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.kfs-link {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 360ms, stroke 200ms;
+}
+.kfs-link.on {
+  opacity: 1;
+  stroke: var(--rosso-bright);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px rgba(225,6,0,0.55));
+}
+.kfs-packet {
+  opacity: 0;
+  transition: opacity 360ms;
+}
+.kfs-packet.on { opacity: 1; }
+
+/* Info panel */
+.kfs-info {
+  flex: 1;
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  overflow-y: auto;
+  max-height: 520px;
+  min-width: 0;
+}
+@media (max-width: 1024px) {
+  .kfs-info { max-height: none; }
+}
+.kfs-info h5 {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rosso-bright);
+  margin: 14px 0 6px;
+}
+.kfs-info h5:first-child { margin-top: 0; }
+.kfs-info p { margin: 6px 0 10px; }
+.kfs-info p b { color: var(--ink); }
+.kfs-info code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(225,6,0,0.10);
+  color: var(--rosso-bright);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(225,6,0,0.18);
+}
+.kfs-info ul, .kfs-info ol { margin: 6px 0 10px 18px; }
+.kfs-info li { margin-bottom: 4px; }
+
+/* K8s ↔ EKS dual card inside info panel */
+.kfs-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+@media (max-width: 720px) { .kfs-pair { grid-template-columns: 1fr; } }
+.kfs-pair-cell {
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.kfs-pair-cell.k8s { border-left: 3px solid #5fb3ff; }
+.kfs-pair-cell.eks { border-left: 3px solid #ff9900; }
+.kfs-pair-cell .lbl {
+  font-family: var(--font-mono);
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.kfs-pair-cell.k8s .lbl { color: #5fb3ff; }
+.kfs-pair-cell.eks .lbl { color: #ff9900; }
+.kfs-pair-cell .val {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+/* Concepts chips */
+.kfs-concepts {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 10px;
+}
+.kfs-chip {
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  color: var(--ink-soft);
+}
+
+/* OSI strip */
+.kfs-osi {
+  display: flex; align-items: stretch;
+  padding: 10px 14px;
+  background: var(--bg-soft);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  gap: 8px;
+}
+.kfs-osi-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+  align-self: center;
+  text-transform: uppercase;
+  min-width: 56px;
+}
+.kfs-osi-layers {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.kfs-osi-layer {
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  text-align: center;
+  opacity: 0.42;
+  transition: opacity 360ms, border-color 200ms, background 200ms;
+}
+.kfs-osi-layer .num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-muted);
+  letter-spacing: 0.10em;
+}
+.kfs-osi-layer .name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.kfs-osi-layer.on {
+  opacity: 1;
+  background: rgba(225,6,0,0.10);
+  border-color: var(--rosso-bright);
+  box-shadow: 0 0 0 1px var(--rosso-bright) inset;
+}
+.kfs-osi-layer.on .num { color: var(--rosso-bright); }
+.kfs-osi-unit {
+  align-self: center;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-width: 130px;
+  text-align: center;
+}
+.kfs-osi-unit .lbl {
+  font-size: 8px;
+  color: var(--ink-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1px;
+}
+.kfs-osi-unit .val { color: var(--rosso-bright); font-weight: 700; }
+@media (max-width: 720px) {
+  .kfs-osi { padding: 8px 10px; gap: 6px; }
+  .kfs-osi-label { display: none; }
+  .kfs-osi-layers { gap: 3px; }
+  .kfs-osi-layer { padding: 4px 5px; }
+  .kfs-osi-layer .name { font-size: 9.5px; }
+  .kfs-osi-layer .num { font-size: 8px; }
+  .kfs-osi-unit { min-width: 90px; font-size: 10px; padding: 4px 9px; }
+}
+
+/* Controls */
+.kfs-ctrl {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg);
+}
+.kfs-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 38px; height: 38px;
+  padding: 0 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms;
+}
+.kfs-btn:hover { border-color: var(--rosso-bright); color: var(--rosso-bright); }
+.kfs-btn.primary {
+  background: var(--rosso-bright);
+  border-color: var(--rosso-bright);
+  color: #fff;
+}
+.kfs-btn.primary:hover { background: #ff1a14; color: #fff; }
+.kfs-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.kfs-dots {
+  display: flex; flex: 1; gap: 3px; flex-wrap: wrap;
+  padding: 0 8px;
+  border-left: 1px solid var(--line);
+  margin-left: 6px;
+  align-items: center;
+  align-self: stretch;
+}
+.kfs-dot {
+  width: 22px; height: 22px;
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  transition: all 140ms;
+}
+.kfs-dot:hover { border-color: var(--rosso-bright); color: var(--ink); }
+.kfs-dot.visited { color: var(--ink-soft); }
+.kfs-dot.active {
+  background: var(--rosso-bright);
+  color: #fff;
+  border-color: var(--rosso-bright);
+}
+@media (max-width: 720px) {
+  .kfs-dots { display: none; }
+  .kfs-btn { min-width: 34px; height: 34px; font-size: 11px; padding: 0 10px; }
+}
+</style>
 </head>
 <body>
 <a id="top" tabindex="-1" aria-hidden="true"></a>
@@ -1710,15 +2199,34 @@ img, svg { max-width: 100%; height: auto; }
   <p>
     그림으로 그리면 이렇습니다.
   </p>
-  <div class="flow">┌──────────────────────────────────────────────────────┐
-│                   Kubernetes                         │ ← 컨테이너를 "어디에" "얼마만큼" 띄울지 결정
-├──────────────────────────────────────────────────────┤
-│   컨테이너 (containerd, runc)                        │ ← namespace + cgroup으로 격리된 프로세스
-├──────────────────────────────────────────────────────┤
-│   운영체제 (Linux kernel, systemd, ...)              │
-├──────────────────────────────────────────────────────┤
-│   하드웨어 (CPU, MMU, RAM, NIC, SSD, ...)            │
-└──────────────────────────────────────────────────────┘</div>
+  <div class="arch-container svg-frame" style="margin: 12px 0;">
+    <svg viewBox="0 0 720 280" role="img" aria-label="컴퓨터 계층 구조">
+      <!-- Layer 1: K8s -->
+      <rect x="40" y="20" width="640" height="56" rx="6" class="svg-flag-fill" stroke="none"/>
+      <text x="56" y="46" font-family="var(--font-mono)" font-size="14" font-weight="800" fill="#0a0a0a">Kubernetes</text>
+      <text x="56" y="64" font-family="var(--font-mono)" font-size="10" fill="#0a0a0a">컨테이너를 "어디에" "얼마만큼" 띄울지 결정 — 오케스트레이터</text>
+      <text x="664" y="46" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="#0a0a0a">Layer 4</text>
+
+      <!-- Layer 2: Container -->
+      <rect x="40" y="86" width="640" height="56" rx="6" class="svg-accent-fill" stroke="none"/>
+      <text x="56" y="112" font-family="var(--font-mono)" font-size="14" font-weight="800" fill="#fff">Container Runtime</text>
+      <text x="56" y="130" font-family="var(--font-mono)" font-size="10" fill="rgba(255,255,255,0.92)">containerd · runc · OCI · namespace + cgroup으로 격리된 프로세스</text>
+      <text x="664" y="112" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="#fff">Layer 3</text>
+
+      <!-- Layer 3: OS -->
+      <rect x="40" y="152" width="640" height="56" rx="6" class="svg-card-fill" stroke="var(--svg-stroke)" stroke-width="1.6"/>
+      <text x="56" y="178" font-family="var(--font-mono)" font-size="14" font-weight="800" class="svg-text">Linux Kernel · systemd</text>
+      <text x="56" y="196" font-family="var(--font-mono)" font-size="10" class="svg-muted">syscall · vfs · netfilter · scheduler</text>
+      <text x="664" y="178" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" class="svg-text">Layer 2</text>
+
+      <!-- Layer 4: HW -->
+      <rect x="40" y="218" width="640" height="50" rx="6" class="svg-tint-fill" stroke="var(--svg-stroke-soft)" stroke-width="1.4"/>
+      <text x="56" y="241" font-family="var(--font-mono)" font-size="13" font-weight="700" class="svg-text">Hardware</text>
+      <text x="56" y="257" font-family="var(--font-mono)" font-size="10" class="svg-muted">CPU · MMU · RAM · NIC · NVMe SSD · PCIe</text>
+      <text x="664" y="241" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" class="svg-text">Layer 1</text>
+    </svg>
+    <div class="legend">아래 계층의 동작을 알아야 위 계층의 설정/장애를 설명할 수 있다 — 우리는 맨 아래부터 시작</div>
+  </div>
   <p>
     Kubernetes는 맨 위 계층입니다. 아래에 있는 것들 — 커널과 하드웨어, 컨테이너 런타임 — 이 어떻게 동작하는지를
     알아야 K8s에서 왜 어떤 설정이 필요하고 왜 어떤 장애가 터지는지 설명할 수 있습니다. 그래서 우리는 맨 아래부터
@@ -2016,14 +2524,46 @@ runc                  (4) clone() + setns() + pivot_root()로 namespace+cgroup �
     각 레이어는 <strong>lowerdir</strong>로 쌓이고, 맨 위에 컨테이너가 변경한 파일을 담는 <strong>upperdir</strong>이 얹힙니다.
     두 디렉터리를 합쳐 보여주는 것이 <strong>merged</strong>입니다.
   </p>
-  <div class="flow">merged/        ← 컨테이너가 보는 / (루트)
-  ├── bin/        ← lower1에서 옴
-  ├── app/        ← lower3에서 옴
-  └── tmp/cache   ← upper(변경분)에만 있음
+  <div class="arch-container svg-frame" style="margin: 12px 0;">
+    <svg viewBox="0 0 720 360" role="img" aria-label="overlayfs 레이어 스택">
+      <!-- merged (top) -->
+      <rect x="40" y="20" width="640" height="60" rx="6" class="svg-flag-fill" stroke="none"/>
+      <text x="56" y="44" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#0a0a0a">merged/</text>
+      <text x="56" y="62" font-family="var(--font-mono)" font-size="10" fill="#0a0a0a">컨테이너가 보는 / (루트) — read+write 일체</text>
+      <text x="600" y="44" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="#0a0a0a">VIEW</text>
 
-upperdir/        ← 컨테이너가 쓴 내용 (종료 시 삭제)
-lowerdir/        ← 이미지 레이어들 (읽기 전용, 공유)
-workdir/         ← overlayfs가 atomic 연산에 쓰는 스크래치</div>
+      <!-- arrow -->
+      <path d="M 360 80 L 360 100" class="svg-edge" stroke="var(--rosso-bright)" stroke-width="2" marker-end="url(#kfsArr)" fill="none"/>
+      <text x="380" y="96" font-family="var(--font-mono)" font-size="10" class="svg-muted">union</text>
+
+      <!-- upperdir -->
+      <rect x="40" y="105" width="640" height="50" rx="6" class="svg-card-fill" stroke="var(--rosso-bright)" stroke-width="1.6"/>
+      <text x="56" y="126" font-family="var(--font-mono)" font-size="12" font-weight="700" class="svg-text">upperdir/  (RW)</text>
+      <text x="56" y="142" font-family="var(--font-mono)" font-size="10" class="svg-muted">컨테이너가 쓴 변경분 · 종료 시 삭제 (CoW)</text>
+      <text x="640" y="126" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="var(--rosso-bright)">tmp/cache</text>
+
+      <!-- workdir -->
+      <rect x="40" y="165" width="640" height="40" rx="6" class="svg-card-fill" stroke="var(--ink-faint)" stroke-dasharray="4 3" stroke-width="1.4"/>
+      <text x="56" y="183" font-family="var(--font-mono)" font-size="12" font-weight="700" class="svg-text">workdir/  (scratch)</text>
+      <text x="56" y="197" font-family="var(--font-mono)" font-size="10" class="svg-muted">overlayfs atomic 연산용 임시</text>
+
+      <!-- lowerdirs (multi-stack) -->
+      <rect x="40" y="220" width="640" height="35" rx="6" class="svg-card-fill" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.95"/>
+      <text x="56" y="241" font-family="var(--font-mono)" font-size="11" font-weight="700" class="svg-text">lowerdir/  L3 — app layer (RO)</text>
+      <text x="640" y="241" text-anchor="end" font-family="var(--font-mono)" font-size="9" class="svg-muted">app/</text>
+
+      <rect x="40" y="260" width="640" height="35" rx="6" class="svg-card-fill" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.85"/>
+      <text x="56" y="281" font-family="var(--font-mono)" font-size="11" font-weight="700" class="svg-text">lowerdir/  L2 — runtime layer (RO)</text>
+      <text x="640" y="281" text-anchor="end" font-family="var(--font-mono)" font-size="9" class="svg-muted">usr/lib/...</text>
+
+      <rect x="40" y="300" width="640" height="35" rx="6" class="svg-card-fill" stroke="var(--ink-faint)" stroke-width="1.4" opacity="0.75"/>
+      <text x="56" y="321" font-family="var(--font-mono)" font-size="11" font-weight="700" class="svg-text">lowerdir/  L1 — base os layer (RO · sha256 공유)</text>
+      <text x="640" y="321" text-anchor="end" font-family="var(--font-mono)" font-size="9" class="svg-muted">bin/, etc/</text>
+
+      <text x="40" y="354" font-family="var(--font-mono)" font-size="10" class="svg-muted">↑ 같은 해시의 lowerdir은 노드와 레지스트리에 한 번만 저장 → 다른 컨테이너와 공유</text>
+    </svg>
+    <div class="legend">overlayfs = 여러 lowerdir(읽기 전용, 공유) + upperdir(쓰기) + workdir(스크래치) → merged 한 장으로 보여줌</div>
+  </div>
   <h4>Copy-on-Write</h4>
   <p>
     컨테이너가 <code>/etc/nginx/nginx.conf</code>를 수정하면, overlayfs는 먼저 lower에서 그 파일을 upper로 복사한 뒤 그 복사본을 수정합니다.
@@ -2673,6 +3213,20 @@ Worker goroutine    ← queue에서 꺼내 reconcile() 수행</div>
   </div>
   <h3 id="p3-c1"><span class="no">3.1</span>Pod · Kubernetes의 최소 단위</h3>
 
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Pod IP</h6>
+      <p>클러스터 CIDR(예: <code>10.244.0.0/16</code>)에서 할당. 노드 외부에서는 안 보이며 오버레이(VXLAN) 캡슐화로 노드 간 통신.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>ENI subnet · VPC native</h6>
+      <p>Pod IP = VPC IP. ENI에 secondary IP 추가로 Pod 직접 할당. <code>WARM_IP_TARGET</code>로 풀 사이즈 조절.</p>
+    </div>
+    <p class="eks-map-note">오버레이 vs VPC native — 같은 subnet이면 RDS·S3와 직접 통신 가능 여부가 갈린다.</p>
+  </div>
   <div class="arch-container svg-frame" style="margin-top: 14px;">
     <svg viewBox="0 0 720 240" role="img" aria-label="Pod 상태 머신">
       <defs>
@@ -2921,6 +3475,20 @@ spec:
   </div>
 
   <h3 id="p3-c3"><span class="no">3.3</span>Service와 DNS · 서비스 디스커버리</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Service의 LoadBalancer 구현</h6>
+      <p>CCM이 클라우드 LB 또는 MetalLB가 BGP로 외부 IP. <code>kube-proxy</code> iptables가 ClusterIP DNAT.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>AWS Load Balancer Controller</h6>
+      <p>Service <code>type=LoadBalancer</code> + 어노테이션 → NLB/ALB 자동 프로비저닝. <code>aws-load-balancer-type=nlb-ip</code>로 IP target type.</p>
+    </div>
+    <p class="eks-map-note">on-prem MetalLB와 달리 EKS는 Controller가 SG·subnet·target group 모두 관리.</p>
+  </div>
   <p>
     Pod의 IP는 언제든 바뀝니다(죽고 재생성). 그래서 안정된 접근 지점이 필요하고, 그것이 <strong>Service</strong>입니다.
     Service는 "셀렉터로 Pod 그룹을 고르고, 그 앞에 고정 IP+DNS 이름을 제공"하는 추상입니다.
@@ -2972,6 +3540,20 @@ spec:
   </div>
 
   <h3 id="p3-c4"><span class="no">3.4</span>Ingress와 Gateway API</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Ingress Controller</h6>
+      <p>nginx-ingress·Traefik·HAProxy 같은 in-cluster 컨트롤러 Pod가 NodePort/LB로 노출. 자체 reload.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>AWS LB Controller (ALB)</h6>
+      <p>Ingress 리소스 → ALB 자동 생성. Listener Rule로 host/path 매칭. <code>X-Forwarded-For</code> 자동 부착.</p>
+    </div>
+    <p class="eks-map-note">nginx-ingress는 모든 트래픽이 컨트롤러 Pod 거쳐가지만, ALB Ingress는 ALB → Pod 직결(targetType=ip).</p>
+  </div>
   <p>
     Service는 L4입니다. HTTP 경로 기반 라우팅, TLS 종결, 호스트 기반 분기 같은 L7 기능이 필요하면 <strong>Ingress</strong>를 씁니다.
     Ingress는 "규칙"일 뿐이고, 실제로 리버스 프록시를 돌리는 것은 <strong>Ingress Controller</strong>(nginx, Traefik, Istio Gateway, AWS LB Controller 등)입니다.
@@ -3037,6 +3619,20 @@ spec:
 </code></pre></details>
 
   <h3 id="p3-c5"><span class="no">3.5</span>ConfigMap과 Secret</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Secret 관리</h6>
+      <p>Secret은 <b>base64 인코딩만</b>. 평문이나 다름없으므로 etcd 암호화(<code>EncryptionConfiguration</code>) + RBAC + 짧은 TTL이 필수.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>External Secrets + Secrets Manager</h6>
+      <p>AWS Secrets Manager에 시크릿 보관, <b>External Secrets Operator</b>가 K8s Secret으로 자동 동기화. 회전(rotation) 자동 반영.</p>
+    </div>
+    <p class="eks-map-note">EKS는 Secret 자체보다 ESO + IRSA 조합으로 정적 시크릿을 줄이는 패턴이 표준.</p>
+  </div>
   <p>
     애플리케이션 설정과 이미지를 분리하는 것이 12-factor의 원칙입니다. Kubernetes는 두 리소스로 이 분리를 제공합니다.
   </p>
@@ -3142,6 +3738,20 @@ spec:
   </ul>
 
   <h3 id="p3-c7"><span class="no">3.7</span>RBAC와 ServiceAccount</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Pod의 외부 인증</h6>
+      <p>ServiceAccount 토큰(JWT)을 Pod에 자동 마운트. apiserver 호출에는 자체 검증. 외부 시스템은 별도 자격 필요.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>IRSA · IAM Roles for Service Accounts</h6>
+      <p>SA에 <code>eks.amazonaws.com/role-arn</code> 어노테이션 → STS <code>AssumeRoleWithWebIdentity</code>로 임시 키. AWS API 호출에 그대로 사용.</p>
+    </div>
+    <p class="eks-map-note">IRSA는 OIDC + STS의 조합으로 Pod-단위 IAM Role을 가능하게 한다 — 노드 단위 IAM 보다 훨씬 안전.</p>
+  </div>
   <p>
     Kubernetes의 권한 체계는 <strong>RBAC</strong>(Role-Based Access Control) 기반입니다. 4개의 리소스로 구성됩니다.
   </p>
@@ -3314,6 +3924,20 @@ spec:
   </div>
 
   <h3 id="p4-c2"><span class="no">4.2</span>CNI 스펙과 주요 구현</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>CNI 플러그인</h6>
+      <p>Calico/Cilium/Flannel — 자체 IPAM + 오버레이(VXLAN, IP-in-IP) 또는 BGP. <code>/etc/cni/net.d/*.conf</code>.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>AWS VPC CNI (aws-node)</h6>
+      <p>DaemonSet으로 노드마다 실행. ENI에 secondary IP 추가 → Pod에 VPC IP 직접 할당. NetPol은 별도 add-on.</p>
+    </div>
+    <p class="eks-map-note">VPC CNI는 NetworkPolicy를 자체 지원하지 않으므로 EKS에서는 Calico 또는 Cilium NetPol agent를 함께 운영.</p>
+  </div>
   <p>
     <abbr data-term="CNI">CNI</abbr>(Container Network Interface) 스펙은 매우 단순합니다. "Pod를 만들 때 이 바이너리에 JSON을 주고 실행하면,
     IP와 라우팅이 설정된다"는 약속입니다.
@@ -3353,6 +3977,20 @@ spec:
   </p>
 
   <h3 id="p4-c3"><span class="no">4.3</span>kube-proxy 3모드 — 어떻게 Service IP가 작동하는가</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>kube-proxy 모드</h6>
+      <p>iptables 모드(기본) 또는 IPVS 모드. 노드마다 DaemonSet. Service 추가 시 iptables 규칙 자동 생성.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>kube-proxy on EKS</h6>
+      <p>EKS Add-on으로 자동 관리. iptables 모드 동일. 1.20+ IPVS도 가능하지만 거의 안 씀.</p>
+    </div>
+    <p class="eks-map-note">Service 수가 수천 개면 iptables → IPVS 전환 고려. EKS에서도 마찬가지.</p>
+  </div>
   <p>
     Service IP는 "가상"이라고 했습니다. 실제 동작은 kube-proxy가 각 노드에 설치한 NAT 규칙에 달려 있습니다.
     역사적으로 세 가지 모드가 있었습니다.
@@ -3399,6 +4037,20 @@ spec:
 
   <h3 id="p4-c4"><span class="no">4.4</span>Service IP의 정체 · 패킷을 따라가기</h3>
 
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Service IP 라우팅</h6>
+      <p>같은 노드라면 cni0 + iptables DNAT으로 끝. 다른 노드면 VXLAN 캡슐화 후 노드 간 전송.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>VPC native routing</h6>
+      <p>VPC route table 그대로 사용. ENI 간 직접 통신. 서브넷 내 통신은 underlay 그대로.</p>
+    </div>
+    <p class="eks-map-note">overlay 없는 VPC native가 MTU·디버깅·외부 통합 모두 단순. 단, ENI 풀 관리 부담 + Pod 밀도 한계.</p>
+  </div>
   <div class="arch-container svg-frame" style="margin-top: 18px;">
     <svg viewBox="0 0 880 320" role="img" aria-label="CNI 패킷 흐름 다이어그램">
       <defs>
@@ -3592,6 +4244,20 @@ options ndots:5</code></pre>
   </ul>
 
   <h3 id="p4-c6"><span class="no">4.6</span>NetworkPolicy — 기본은 "올오픈"</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>NetworkPolicy</h6>
+      <p>Calico/Cilium 같은 CNI가 eBPF 또는 iptables로 Pod 라벨 기반 default-deny 강제.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>EKS NetworkPolicy</h6>
+      <p>VPC CNI 1.14+ 부터 NetworkPolicy 자체 지원 (eBPF). 또는 Calico add-on 별도 설치.</p>
+    </div>
+    <p class="eks-map-note">EKS는 SG(인스턴스 단위) + NP(Pod 단위)로 2-layer 방화벽이 표준.</p>
+  </div>
   <p>
     Kubernetes의 기본 네트워크는 "모든 Pod가 모든 Pod와 통신 가능"입니다. 이를 좁히려면 <strong>NetworkPolicy</strong>를 씁니다.
     NetworkPolicy가 효과를 내려면 CNI가 이를 구현해야 합니다(Calico, Cilium, Weave 등은 지원, Flannel 단독은 미지원).
@@ -3659,6 +4325,20 @@ spec:
   </div>
 
   <h3 id="p4-c7"><span class="no">4.7</span>LoadBalancer 구현과 externalTrafficPolicy</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>LoadBalancer Service</h6>
+      <p>on-prem: MetalLB가 ARP/BGP로 외부 IP 발표. cloud: CCM이 외부 LB 호출.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>NLB / ALB / 고정 IP</h6>
+      <p>NLB는 AZ별 고정 IP 가능 → 파트너 화이트리스트에 유리. <code>Cross-Zone=true</code>로 균등 분배. preserve_client_ip로 source IP 유지.</p>
+    </div>
+    <p class="eks-map-note">파트너 정산처럼 IP 화이트리스트가 필요한 시나리오는 NLB의 고정 IP가 거의 필수.</p>
+  </div>
   <p>
     Service <code>type: LoadBalancer</code>는 클라우드에서만 "그냥 동작"합니다. 온프레미스에서는 <strong>MetalLB</strong>가 표준 솔루션입니다.
   </p>
@@ -3754,6 +4434,20 @@ spec:
     <p class="summary">CSI의 Controller/Node/Identity 구성요소와 StatefulSet이 왜 순서를 보장해야 하는지, 그리고 DB를 K8s에 올릴 때의 함정을 다룹니다.</p>
   </div>
   <h3 id="p5-c1"><span class="no">5.1</span>스토리지 기초 — 블록·파일·오브젝트</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Storage 백엔드</h6>
+      <p>클러스터 외부 NFS/iSCSI 또는 노드의 local-path-provisioner. 운영 부담 ↑.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>EBS · EFS · S3 CSI</h6>
+      <p>EBS gp3는 AZ-bound RWO. EFS는 RWX. Mountpoint S3 CSI로 S3를 파일시스템처럼.</p>
+    </div>
+    <p class="eks-map-note">EBS는 같은 AZ 안에서만 attach 가능 — StatefulSet은 nodeAffinity로 zone 고정 필요.</p>
+  </div>
   <p>
     현대의 스토리지는 세 가지 주요 추상으로 구분됩니다. Kubernetes 볼륨도 이 구분을 따라갑니다.
   </p>
@@ -3890,6 +4584,20 @@ postgres-2.postgres-headless.default.svc.cluster.local → Pod C의 IP</code></p
     whenScaled: Delete    # scale-down 시 여분 PVC 삭제</code></pre>
 
   <h3 id="p5-c4"><span class="no">5.4</span>데이터베이스를 K8s에 올릴 때의 함정</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>DB 운영 모델</h6>
+      <p>StatefulSet + PV + 자체 backup/replication. 운영 부담 매우 큼.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>Aurora PostgreSQL (managed)</h6>
+      <p>Multi-AZ 자동 페일오버, 자동 backup, 6 copies/3 AZs. Pod에서는 endpoint URL만 환경변수로.</p>
+    </div>
+    <p class="eks-map-note">SLA 99.99% 요구면 거의 모든 팀이 매니지드 선택. 단 클라우드 lock-in 인지 필요.</p>
+  </div>
   <p>
     "Cattle, not pets"라는 K8s 철학과 DB는 태생부터 충돌합니다. 그래도 실무에서는 자주 올리게 되고, 그 함정을 알아야 합니다.
   </p>
@@ -4105,6 +4813,20 @@ spec:
 </code></pre>
 
   <h3 id="p6-c4"><span class="no">6.4</span>Pod Security Standards</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Pod Security</h6>
+      <p>Pod Security Standards (privileged/baseline/restricted) — Namespace 라벨로 강제.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>PSA + IAM + SCP</h6>
+      <p>PSA 동일 + EKS는 IAM 권한·SCP(조직 가드레일)와 결합. KMS·CloudTrail로 감사.</p>
+    </div>
+    <p class="eks-map-note">클라우드에선 K8s RBAC만으로 부족 — IAM/SCP까지 결합한 다층 권한 모델이 표준.</p>
+  </div>
   <p>
     1.25에서 PodSecurityPolicy(PSP)가 제거되고 그 자리를 <strong>Pod Security Standards</strong>(PSS)가 차지했습니다.
     세 레벨 정의:
@@ -4173,6 +4895,20 @@ spec:
               -----END PUBLIC KEY-----</code></pre>
 
   <h3 id="p6-c6"><span class="no">6.6</span>감사 로깅·etcd 암호화</h3>
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>Audit 로깅</h6>
+      <p>apiserver의 audit log를 파일로 저장 → 별도 수집기. 자체 운영 필요.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>CloudWatch + S3</h6>
+      <p>EKS Control Plane Logging 활성화 → CloudWatch Log Group. S3 export · Athena 쿼리.</p>
+    </div>
+    <p class="eks-map-note">EKS는 audit/api/authenticator/controllerManager/scheduler 5종 로그 토글 — 비용은 약간 들지만 운영이 압도적으로 단순.</p>
+  </div>
   <h4>Audit Policy</h4>
   <p>
     apiserver의 감사 로그는 "누가 언제 어떤 리소스에 무엇을 했는가"를 기록합니다. 정책으로 수준을 조절:
@@ -4514,6 +5250,98 @@ reclaimPolicy: Delete</code></pre>
     <div class="explanation">IRSA = OIDC federation으로 SA 토큰을 AWS 자격 증명으로 교환. 이해의 관건.</div>
   </div>
   <div class="chapter-end">— END OF PART 7 —</div>
+
+  <h3 id="p7-c8"><span class="no">7.8</span>K8s ↔ EKS Real-World Network Flow · 16-Scene Stepper</h3>
+
+  <p>
+    이 챕터는 가이드 전체의 종합편입니다. 클라이언트가 도메인을 친 순간부터 응답이 돌아오기까지,
+    K8s 본질이 EKS의 어떤 AWS 리소스와 어떻게 대응되는지를 16단계로 따라가 봅니다.
+    각 단계마다 다이어그램에서 활성 노드만 빨갛게 강조되고, 우측 패널에 K8s/EKS 매핑이 동시에 표시됩니다.
+  </p>
+
+  <p class="kfs-hint" style="font-size:13px; color:var(--ink-muted);">
+    💡 <b>조작법</b> · ◀ ▶ 버튼 또는 <code>←</code> <code>→</code> 키로 이동 · ▶ 재생으로 4.5초마다 자동 진행 ·
+    하단 점(scene dots)을 직접 클릭해 점프 · 진행 위치는 자동 저장됩니다.
+  </p>
+
+  <div class="kfs-flow" id="kfsFlow" tabindex="0" aria-label="K8s Real-World Flow Stepper">
+
+    <!-- Header -->
+    <div class="kfs-head">
+      <div class="kfs-num">
+        <div class="n">01</div>
+        <div class="lab">SCENE</div>
+      </div>
+      <div class="kfs-head-body">
+        <div class="kfs-tag">CLIENT · 출발</div>
+        <div class="kfs-title">로딩 중…</div>
+        <div class="kfs-analogy">…</div>
+      </div>
+    </div>
+
+    <!-- Stage SVG canvas + Info -->
+    <div class="kfs-body">
+      <div class="kfs-stage">
+        <svg class="kfs-canvas" viewBox="0 0 1080 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Network flow canvas">
+          <defs>
+            <marker id="kfsArr" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+              <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--rosso-bright)"/>
+            </marker>
+          </defs>
+          <!-- Zone bands -->
+          <rect class="kfs-zone-rect" x="10" y="10" width="560" height="110" rx="10"/>
+          <text class="kfs-zone-label" x="22" y="26">INTERNET / DNS / TLS</text>
+
+          <rect class="kfs-zone-rect" x="10" y="125" width="940" height="100" rx="10"/>
+          <text class="kfs-zone-label" x="22" y="140">EDGE · LB · TARGETS</text>
+
+          <rect class="kfs-zone-rect" x="10" y="230" width="940" height="100" rx="10"/>
+          <text class="kfs-zone-label" x="22" y="245">CLUSTER NETWORK / POD / SIDECAR / APP</text>
+
+          <rect class="kfs-zone-rect" x="10" y="335" width="940" height="105" rx="10"/>
+          <text class="kfs-zone-label" x="22" y="350">CONFIG · DATA · CONTROL PLANE</text>
+
+          <g id="kfsEdges"></g>
+          <g id="kfsNodes"></g>
+        </svg>
+      </div>
+
+      <div class="kfs-info" aria-live="polite">로딩 중…</div>
+    </div>
+
+    <!-- OSI strip -->
+    <div class="kfs-osi">
+      <div class="kfs-osi-label">OSI</div>
+      <div class="kfs-osi-layers">
+        <div class="kfs-osi-layer" data-layer="1"><div class="num">L1</div><div class="name">Physical</div></div>
+        <div class="kfs-osi-layer" data-layer="2"><div class="num">L2</div><div class="name">Data Link</div></div>
+        <div class="kfs-osi-layer" data-layer="3"><div class="num">L3</div><div class="name">Network</div></div>
+        <div class="kfs-osi-layer" data-layer="4"><div class="num">L4</div><div class="name">Transport</div></div>
+        <div class="kfs-osi-layer" data-layer="5"><div class="num">L5</div><div class="name">Session</div></div>
+        <div class="kfs-osi-layer" data-layer="6"><div class="num">L6</div><div class="name">Presentation</div></div>
+        <div class="kfs-osi-layer" data-layer="7"><div class="num">L7</div><div class="name">Application</div></div>
+      </div>
+      <div class="kfs-osi-unit">
+        <span class="lbl">Data unit</span>
+        <span class="val">—</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="kfs-ctrl">
+      <button class="kfs-btn" type="button" data-act="prev" aria-label="이전 scene">◀</button>
+      <button class="kfs-btn primary" type="button" data-act="play" aria-label="자동 재생">▶</button>
+      <button class="kfs-btn" type="button" data-act="next" aria-label="다음 scene">▶</button>
+      <button class="kfs-btn" type="button" data-act="reset" aria-label="처음으로" title="처음으로">⏮</button>
+      <div class="kfs-dots" role="tablist" aria-label="Scene 점프"></div>
+    </div>
+
+  </div>
+
+  <p style="margin-top:16px; font-size:13px; color:var(--ink-muted);">
+    🏁 <b>이 단원의 맥락</b> · 위 16단계는 P3 Resources, P4 Networking, P5 Storage, P6 Security, P9 Deep Dive에서 다룬 모든 K8s 개념을
+    하나의 실제 운영 흐름으로 엮은 것입니다. 막히는 단계가 있으면 해당 챕터로 돌아가서 보강하세요.
+  </p>
 </section>
 
 <!-- ============================================================== PART 8 -->
@@ -5569,6 +6397,20 @@ VPC 내 private 서브넷:
   </div>
   <h3 id="p9-c1"><span class="no">9.1</span>kubectl apply -f · 15단계 초정밀 해부</h3>
 
+
+  <div class="eks-map">
+    <div class="eks-map-cell k8s">
+      <div class="lbl">K8s vanilla</div>
+      <h6>apiserver 운영</h6>
+      <p>직접 운영 (kubeadm 또는 kops). HA 구성, 인증서 갱신, etcd 백업 모두 직접.</p>
+    </div>
+    <div class="eks-map-cell eks">
+      <div class="lbl">EKS / AWS</div>
+      <h6>EKS managed control plane</h6>
+      <p>apiserver/etcd/scheduler 모두 AWS 관리. Multi-AZ 자동. 사용자는 워커 노드만 신경.</p>
+    </div>
+    <p class="eks-map-note">EKS의 가장 큰 가치는 매니지드 컨트롤 플레인 — 99.95% SLA에 etcd 운영 부담 0.</p>
+  </div>
   <h4>🏎️ Pit Lane Lab — kubectl apply 15단계 트레이스</h4>
   <p>이 챕터의 15단계 흐름을 단일 시나리오 lab으로 압축했습니다. 각 탭은 한 위상(client → authn/z → mutating → validating → etcd → watch fanout)을 담당.</p>
   <div class="klab" id="klab-kubectl-trace" data-lab="kubectl-trace">
@@ -11531,5 +12373,445 @@ header.page::after {
 
   document.documentElement.classList.add("v3-widgets-ready");
 })();
+</script>
+<script id="ferrari-v4-flow-js">
+
+/* =======================================================================
+ * v4 K8S REAL-WORLD NETWORK FLOW STEPPER · 16-scene engine
+ * EKS prd-mpay 24-scene을 K8s 학습 관점으로 재구성
+ * ======================================================================= */
+(function () {
+  "use strict";
+
+  /* ───── 노드 정의 (id, type, x, y, w, h, title, sub, tag) ───── */
+  var NODES = [
+    // Internet band (top)
+    {id:'client',  t:'k8s', x:30,   y:30,  w:160, h:70, title:'Client',         sub:'browser · curl · SDK',     tag:'L7'},
+    {id:'dns',     t:'svc', x:220,  y:30,  w:160, h:70, title:'DNS',            sub:'CoreDNS · Route53',        tag:'CLUSTER/AWS'},
+    {id:'tls',     t:'aws', x:410,  y:30,  w:160, h:70, title:'TLS',            sub:'cert-manager · ACM',       tag:'L6/L7'},
+
+    // Edge gates
+    {id:'sg',      t:'aws', x:30,   y:140, w:160, h:70, title:'Edge Gate',      sub:'NetPol · NLB SG',          tag:'L3/L4'},
+    {id:'nlb',     t:'aws', x:220,  y:140, w:160, h:70, title:'L4 LB',          sub:'Service LB · NLB',         tag:'L4'},
+    {id:'alb',     t:'aws', x:410,  y:140, w:160, h:70, title:'L7 LB',          sub:'Ingress · ALB',            tag:'L7'},
+
+    // Cluster targeting
+    {id:'tgb',     t:'k8s', x:600,  y:140, w:160, h:70, title:'Target Bind',    sub:'EndpointSlice · TGB',      tag:'L4'},
+    {id:'kproxy',  t:'k8s', x:790,  y:140, w:160, h:70, title:'kube-proxy',     sub:'iptables DNAT',            tag:'L3/L4'},
+
+    // CNI / Pod networking
+    {id:'cni',     t:'aws', x:30,   y:250, w:160, h:70, title:'CNI',            sub:'Calico · VPC CNI',         tag:'L2/L3'},
+    {id:'podnet',  t:'k8s', x:220,  y:250, w:160, h:70, title:'Pod Network',    sub:'eth0 · ENI sec IP',        tag:'L3'},
+    {id:'envoy',   t:'istio',x:410, y:250, w:160, h:70, title:'Envoy Sidecar',  sub:'mTLS · L7 proxy',          tag:'L7'},
+    {id:'app',     t:'k8s', x:600,  y:250, w:160, h:70, title:'App Pod',        sub:'container + cgroup',       tag:'L7'},
+
+    // Identity / Config
+    {id:'irsa',    t:'aws', x:790,  y:250, w:160, h:70, title:'Pod Identity',   sub:'SA token · IRSA',          tag:'AUTH'},
+    {id:'cm',      t:'k8s', x:30,   y:360, w:160, h:70, title:'Config',         sub:'CM · Secret · ESO',        tag:'CONFIG'},
+
+    // Data / Response
+    {id:'db',      t:'aws', x:220,  y:360, w:160, h:70, title:'Data',           sub:'StatefulSet · Aurora',     tag:'L7'},
+    {id:'resp',    t:'svc', x:410,  y:360, w:160, h:70, title:'Response',       sub:'역경로 · TCP FIN',          tag:'ALL'},
+
+    // Apiserver / etcd (control plane reference)
+    {id:'api',     t:'k8s', x:600,  y:360, w:160, h:70, title:'apiserver',      sub:'managed (EKS)',            tag:'CTRL'},
+    {id:'etcd',    t:'k8s', x:790,  y:360, w:160, h:70, title:'etcd',           sub:'Raft KV',                  tag:'CTRL'}
+  ];
+
+  /* ───── Edges (연결선): scene별로 활성 ───── */
+  var EDGES = [
+    // 01 client → dns
+    {id:'e01', from:'client', to:'dns'},
+    // 02 dns → tls
+    {id:'e02', from:'dns',    to:'tls'},
+    // 03 client → sg / nlb (TLS)
+    {id:'e03', from:'tls',    to:'sg'},
+    // 04 sg → nlb
+    {id:'e04', from:'sg',     to:'nlb'},
+    // 05 nlb → alb
+    {id:'e05', from:'nlb',    to:'alb'},
+    // 06 alb → tgb
+    {id:'e06', from:'alb',    to:'tgb'},
+    // 07 tgb → kproxy
+    {id:'e07', from:'tgb',    to:'kproxy'},
+    // 08 kproxy → cni
+    {id:'e08', from:'kproxy', to:'cni'},
+    // 09 cni → podnet
+    {id:'e09', from:'cni',    to:'podnet'},
+    // 10 podnet → envoy
+    {id:'e10', from:'podnet', to:'envoy'},
+    // 11 envoy → app
+    {id:'e11', from:'envoy',  to:'app'},
+    // 12 app → irsa
+    {id:'e12', from:'app',    to:'irsa'},
+    // 13 app → cm
+    {id:'e13', from:'app',    to:'cm'},
+    // 14 app → db
+    {id:'e14', from:'app',    to:'db'},
+    // 15 db → resp
+    {id:'e15', from:'db',     to:'resp'},
+    // 16 resp → client (역경로)
+    {id:'e16', from:'resp',   to:'client'},
+    // control: app ↔ api ↔ etcd
+    {id:'ec1', from:'app',    to:'api'},
+    {id:'ec2', from:'api',    to:'etcd'}
+  ];
+
+  /* ───── 16 SCENES ───── */
+  var SCENES = [
+    {
+      n:'01', tag:'CLIENT · 출발',
+      title:'클라이언트가 도메인을 친다',
+      analogy:'택배 보내기 전에 "이 주소 정확해?" 하고 지도 앱에서 검색해 보는 순간.',
+      body:'<h5>무슨 일이 일어나나</h5><p>3종 클라이언트가 같은 도메인에 접근. 출발은 다르지만 첫 질문은 같다 — <b>"이 도메인의 IP는?"</b></p><ul><li><b>Browser</b> · 사용자 URL 입력</li><li><b>Mobile</b> · 네이티브 HTTPS, 인증서 피닝 가능</li><li><b>CLI</b> · curl·SDK·CI 파이프라인</li></ul><p>HTTPS 첫 패킷이 나가기 전, OS DNS 리졸버가 가장 먼저 일한다.</p>',
+      pair:{k8s:'<code>kubectl</code>·<code>curl http://svc.ns:8080</code> 같이 클러스터 내부 호출도 동일한 시작점.', eks:'외부 클라이언트는 <code>shop.musinsapayments.com</code> 같은 퍼블릭 도메인으로 진입.'},
+      hi:['client'], edges:[], osi:[7], unit:'HTTP Request',
+      concepts:['HTTPS','URL','OS Resolver','User-Agent']
+    },
+    {
+      n:'02', tag:'DNS · 이름 → 주소',
+      title:'CoreDNS / Route53 조회',
+      analogy:'전화번호부에서 "스타벅스 강남점" 찾아 전화번호 받는 것.',
+      body:'<h5>두 갈래</h5><p>클러스터 내부 호출이면 <b>CoreDNS</b>(<code>kube-system</code>)가 <code>svc.ns.svc.cluster.local</code>을 ClusterIP로 변환. 외부 호출이면 OS 리졸버 → 통신사 캐시 → <b>Route53</b> 권한 NS가 A/Alias 레코드 응답.</p><p>EKS의 <code>*.musinsapayments.com</code>은 외부 인입용, <code>*.in.musinsapayments.com</code>은 내부 서비스 호출용.</p>',
+      pair:{k8s:'<b>CoreDNS</b>: <code>cluster.local</code> 검색 도메인, NodeLocal DNSCache로 부하 분산.', eks:'<b>Route53</b>: 호스팅 존 + Alias to NLB/ALB. TTL이 짧으면 부하 ↑, 길면 장애 회복 ↓.'},
+      hi:['client','dns'], edges:['e01'], osi:[7,4], unit:'DNS UDP/53',
+      concepts:['CoreDNS','Route53','Hosted Zone','TTL','Alias']
+    },
+    {
+      n:'03', tag:'TLS · 비밀의 방',
+      title:'TLS 1.3 핸드셰이크',
+      analogy:'가게 들어가기 전 신분증 확인 + 둘만 아는 암호 정하는 순간.',
+      body:'<h5>4단계</h5><ol><li>ClientHello (SNI, cipher 목록)</li><li>ServerHello + 인증서 체인</li><li>체인 검증 (Root CA → 중간 → 서버)</li><li>ECDHE 키 교환 → AEAD 암호화</li></ol><p>실제 TLS 종결은 <b>ALB</b>. NLB는 pass-through라 NLB 단계에선 패킷이 여전히 암호화 상태.</p>',
+      pair:{k8s:'<b>cert-manager</b> + ClusterIssuer가 Let’s Encrypt/Vault에서 cert 자동 발급, Secret으로 마운트.', eks:'<b>ACM</b>이 <code>*.musinsapayments.com</code> 와일드카드 발급, ALB Listener에 ARN으로 attach. 90일 자동 갱신.'},
+      hi:['client','tls','sg'], edges:['e02'], osi:[6,7], unit:'TLS payload',
+      concepts:['TLS 1.3','SNI','ECDHE','ACM','cert-manager']
+    },
+    {
+      n:'04', tag:'EDGE GATE · 1차 게이트',
+      title:'NetworkPolicy / NLB Security Group',
+      analogy:'은행 별관 출입문 — 사전 등록된 협력사만 통과시키는 경비실.',
+      body:'<h5>두 종류의 방화벽</h5><p>IP 단위 방화벽이 가장 먼저 걸러낸다. 적용 순서: <b>VPC SG → 클러스터 NetworkPolicy</b>.</p><ul><li>SG 인바운드 — 파트너 IP만 허용 (<code>0.0.0.0/0</code> 금지)</li><li>NetworkPolicy — Pod 라벨/네임스페이스 기준 default-deny</li></ul>',
+      pair:{k8s:'<b>NetworkPolicy</b> · CNI 플러그인(Calico/Cilium)이 eBPF/iptables로 강제. Pod 라벨 기반.', eks:'<b>Security Group</b> · 인스턴스/ENI 단위 stateful 필터. <code>K-Bank 121.162.123.140/32</code> 같은 IP allowlist.'},
+      hi:['tls','sg','nlb'], edges:['e03'], osi:[3,4], unit:'TCP SYN',
+      concepts:['Security Group','NetworkPolicy','default-deny','allowlist']
+    },
+    {
+      n:'05', tag:'L4 LB · 톨게이트',
+      title:'NLB · L4 진입점',
+      analogy:'고속도로 톨게이트 — 차종은 안 따지고 통행권 번호만 본다.',
+      body:'<h5>L4 LB의 역할</h5><p>TCP 레벨 부하 분산. SSL 풀지 않고 그대로 흘려보냄. 클라이언트 IP 보존이 강점.</p><ul><li>고정 IP가 필요한 파트너 화이트리스트 운영에 유리</li><li>Cross-Zone Enabled — 어느 AZ로 들어와도 ALB 양쪽 분배</li><li>초저지연 (TLS 종결 부담 없음)</li></ul>',
+      pair:{k8s:'<b>Service type=LoadBalancer</b> · 클라우드 LB Controller가 외부 LB 프로비저닝, 트래픽 → NodePort → ClusterIP.', eks:'<b>ext-gw NLB</b> · prd-mpay 외부 VPC <code>10.36.0.0/16</code>의 internal NLB. <code>Cross-Zone=true</code>.'},
+      hi:['sg','nlb','alb'], edges:['e04'], osi:[4,3], unit:'TCP segment',
+      concepts:['NLB','Pass-through','Cross-Zone','Fixed IP']
+    },
+    {
+      n:'06', tag:'L7 LB · 호텔 프런트',
+      title:'ALB · TLS 종결 + HTTP 라우팅',
+      analogy:'호텔 프런트 — 신분증·방번호 확인 후 객실로 안내. 외국어(TLS)는 여기서 한국어(HTTP)로 통역.',
+      body:'<h5>5단계</h5><ol><li>NLB로부터 TCP 443 받음</li><li>ACM 인증서로 <b>TLS 종결</b></li><li>HTTP 80 평문화 → Host/Path 라우팅</li><li>Listener Rule 평가</li><li><code>X-Forwarded-For</code>·<code>X-Forwarded-Proto</code> 헤더 부착</li></ol>',
+      pair:{k8s:'<b>Ingress</b>(nginx-ingress, Traefik) 또는 <b>Gateway API</b> · YAML로 host/path 룰 정의.', eks:'<b>ALB Ingress Controller</b>(=AWS LB Controller) · Ingress 리소스 → ALB 리스너/룰 자동 생성. <code>aws-load-balancer-type=alb</code>.'},
+      hi:['nlb','alb','tgb'], edges:['e05'], osi:[7,6], unit:'HTTP',
+      concepts:['Ingress','Gateway API','ALB','TLS Terminate','X-Forwarded-For']
+    },
+    {
+      n:'07', tag:'TARGET BIND · 누구한테?',
+      title:'EndpointSlice / TargetGroupBinding',
+      analogy:'택배 회사가 "이 동네 살아있는 집 명단"을 매번 갱신하는 것.',
+      body:'<h5>Healthy Pod 목록 유지</h5><p>Deployment의 헬시한 Pod IP 목록을 LB가 어떻게 알까? K8s가 자동으로 EndpointSlice를 만들고, Cloud LB Controller가 그 목록을 외부 LB로 동기화.</p><ul><li>readinessProbe 통과 Pod만 포함</li><li>최대 100개씩 EndpointSlice 분할</li><li>Pod 죽으면 즉시 LB에서 제외</li></ul>',
+      pair:{k8s:'<b>EndpointSlice</b> · Deployment + Service → Endpoints controller가 자동 갱신. <code>kubectl get endpointslice</code>.', eks:'<b>TargetGroupBinding</b>(CRD) · AWS LB Controller가 EndpointSlice를 watch → ALB Target Group에 IP 등록. <code>targetType=ip</code>.'},
+      hi:['alb','tgb','kproxy'], edges:['e06'], osi:[4], unit:'TCP/HTTP',
+      concepts:['EndpointSlice','TargetGroupBinding','readinessProbe','Health Check']
+    },
+    {
+      n:'08', tag:'KUBE-PROXY · DNAT',
+      title:'iptables DNAT — ClusterIP의 정체',
+      analogy:'전화 교환원 — 대표번호 한 번 누르면 실제 내선번호로 라우팅.',
+      body:'<h5>iptables 규칙 발동</h5><p>각 노드의 <b>kube-proxy</b>가 모든 Service에 대해 iptables 규칙을 깔아둔다. ClusterIP로 향하는 패킷은 <b>DNAT</b>되어 실제 Pod IP로 라우팅.</p><pre style="font-size:11px; padding:8px 10px; background:rgba(225,6,0,0.05); border-radius:4px; margin:6px 0;">KUBE-SVC-XYZ\n  prob 0.33 → KUBE-SEP-A → 10.244.1.2:8080\n  prob 0.50 → KUBE-SEP-B → 10.244.2.7:8080\n  default   → KUBE-SEP-C → 10.244.3.5:8080</pre>',
+      pair:{k8s:'<b>kube-proxy</b> · iptables 모드(기본) 또는 IPVS 모드. 노드마다 DaemonSet으로 작동.', eks:'<b>kube-proxy</b> · EKS Add-on으로 관리. 동일하게 iptables 모드. 노드 부팅 시 자동 설치.'},
+      hi:['tgb','kproxy','cni'], edges:['e07'], osi:[3,4], unit:'IP packet',
+      concepts:['kube-proxy','iptables','DNAT','conntrack','IPVS']
+    },
+    {
+      n:'09', tag:'CNI · 네트워크 결선',
+      title:'CNI 플러그인이 Pod 네트워크를 만든다',
+      analogy:'아파트 새 입주자가 들어오면 관리실이 인터넷·전화선을 연결해 주는 것.',
+      body:'<h5>Pod 생성 시 CNI 호출</h5><ol><li>kubelet이 <code>/etc/cni/net.d/*.conf</code> 읽음</li><li>CNI 바이너리 실행 (ADD 명령)</li><li>veth pair 생성, 한쪽은 Pod의 eth0, 다른 쪽은 호스트 cni0 브리지에 연결</li><li>Pod IP 할당 (IPAM)</li></ol>',
+      pair:{k8s:'<b>Calico/Cilium/Flannel</b> · 오버레이(VXLAN, IP-in-IP) 또는 BGP 라우팅. 자체 IPAM.', eks:'<b>AWS VPC CNI</b> · ENI에 secondary IP 추가 → Pod에 직접 할당. <b>Pod IP = VPC IP</b>. <code>WARM_IP_TARGET=1</code>로 풀 사이즈 조절.'},
+      hi:['kproxy','cni','podnet'], edges:['e08'], osi:[2,3], unit:'L2/L3 frame',
+      concepts:['CNI','VPC CNI','veth','cni0','ENI','VXLAN']
+    },
+    {
+      n:'10', tag:'POD NETWORK · 입주',
+      title:'Pod의 eth0 — IP가 붙는다',
+      analogy:'새 집에 도착해 우편함 번호를 받는 순간 — 이제 누군가 보낸 편지를 받을 수 있다.',
+      body:'<h5>Pod IP의 두 가지 방식</h5><ul><li><b>오버레이</b> · 클러스터 CIDR (예: <code>10.244.0.0/16</code>)에서 할당. 노드 외부에서는 안 보임.</li><li><b>VPC native</b> · VPC 서브넷 CIDR에서 할당. AWS·GCP·Azure CNI 공통.</li></ul><p>IP가 붙으면 비로소 Pod는 readiness 게이트를 통과할 자격을 얻는다.</p>',
+      pair:{k8s:'<b>오버레이 IP</b> · 노드 간 통신은 VXLAN 캡슐화. MTU 1450 (1500 - 50 overhead).', eks:'<b>VPC native IP</b> · ENI subnet에서 할당. 다른 VPC 리소스(RDS, S3)와 직접 통신 가능.'},
+      hi:['cni','podnet','envoy'], edges:['e09'], osi:[3], unit:'IP packet',
+      concepts:['Pod IP','Cluster CIDR','VXLAN','MTU','VPC native']
+    },
+    {
+      n:'11', tag:'SIDECAR · mTLS',
+      title:'Envoy 사이드카 · 서비스 메시 입구',
+      analogy:'아파트 입구마다 경비실이 추가로 신분 확인하는 것 — Pod마다 미니 프록시.',
+      body:'<h5>사이드카 인젝션</h5><p>서비스 메시(Istio/Linkerd)가 활성화되면 Pod에 <b>Envoy 컨테이너</b>가 자동 주입된다. 모든 인/아웃 트래픽이 Envoy를 거치므로:</p><ul><li><b>mTLS</b> 자동 — 양쪽 서비스가 서로 인증서 검증</li><li>L7 트래픽 정책 (retry, timeout, canary)</li><li>관찰성 (Prometheus, distributed tracing)</li></ul>',
+      pair:{k8s:'<b>Istio Sidecar</b>(<code>istio-proxy</code>) · MutatingWebhook이 <code>istio-injection=enabled</code> ns의 Pod에 자동 주입.', eks:'동일 — EKS는 Istio가 1급 옵션. <b>Istio gateway-external</b>(prd-mpay) 같이 게이트웨이 Pod도 Envoy.'},
+      hi:['podnet','envoy','app'], edges:['e10'], osi:[7], unit:'HTTP/mTLS',
+      concepts:['Sidecar','Envoy','mTLS','Istio','PeerAuthentication']
+    },
+    {
+      n:'12', tag:'APP POD · 도착',
+      title:'드디어 컨테이너 안에서 처리',
+      analogy:'드디어 손님이 객실 안에 들어와 룸서비스 받는 순간.',
+      body:'<h5>컨테이너의 진짜 모습</h5><p>Pod = 같은 네트워크/스토리지 ns 공유하는 컨테이너 묶음. 컨테이너 = <b>cgroup + namespace + chroot/pivot_root + exec</b>. 그 위에 우리 앱이 돌아간다.</p><ul><li>cgroup으로 CPU/메모리 한도</li><li>net ns로 IP 격리</li><li>mnt ns + overlayfs로 파일시스템 격리</li></ul>',
+      pair:{k8s:'<b>Pod</b> · 어느 노드에서든 동일하게 작동. kubelet이 CRI(containerd) 호출.', eks:'<b>Pod on m7i NodePool</b> · Karpenter가 미리 띄운 EC2 인스턴스 위 containerd. NodePool taint로 워크로드 격리.'},
+      hi:['envoy','app','irsa'], edges:['e11'], osi:[7], unit:'app payload',
+      concepts:['Pod','Container','cgroup','namespace','runtime']
+    },
+    {
+      n:'13', tag:'POD IDENTITY · 인증',
+      title:'Pod가 외부 리소스에 자기를 증명한다',
+      analogy:'직원증을 보여주고 회사 회의실 예약 시스템 접근하는 것.',
+      body:'<h5>SA Token vs IRSA</h5><p>Pod 안 앱이 AWS S3나 다른 클러스터 API에 접근하려면 ID가 필요하다.</p><ul><li>K8s 내부 호출 → ServiceAccount 토큰을 자동 마운트</li><li>AWS 호출 → IRSA로 STS AssumeRole 후 임시 자격증명</li></ul>',
+      pair:{k8s:'<b>ServiceAccount</b> · <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code>에 JWT 마운트. apiserver가 검증.', eks:'<b>IRSA</b> · SA에 <code>eks.amazonaws.com/role-arn</code> 어노테이션 → STS <code>AssumeRoleWithWebIdentity</code> → AWS API 호출에 임시 키 사용.'},
+      hi:['app','irsa','cm'], edges:['ec1','e12'], osi:[7], unit:'JWT/STS',
+      concepts:['ServiceAccount','IRSA','STS','OIDC','AssumeRoleWithWebIdentity']
+    },
+    {
+      n:'14', tag:'CONFIG · 설정 주입',
+      title:'ConfigMap · Secret · External Secrets',
+      analogy:'직원 책상에 매뉴얼 폴더와 비밀번호 카드를 미리 깔아 두는 것.',
+      body:'<h5>설정의 두 갈래</h5><ul><li><b>비민감</b> · ConfigMap → env 또는 file mount</li><li><b>민감</b> · Secret(base64 인코딩만) — 그러나 etcd 암호화 + RBAC 필수. 또는 <b>External Secrets Operator</b>로 외부 vault 동기화.</li></ul>',
+      pair:{k8s:'<b>ConfigMap + Secret</b> · YAML 정의 후 <code>envFrom</code> 또는 <code>volumeMounts</code>.', eks:'<b>External Secrets Operator</b> · AWS Secrets Manager의 시크릿을 K8s Secret으로 자동 동기화. 회전(rotation) 시에도 자동 반영.'},
+      hi:['app','cm','db'], edges:['e13'], osi:[7], unit:'config bytes',
+      concepts:['ConfigMap','Secret','External Secrets','Secrets Manager','rotation']
+    },
+    {
+      n:'15', tag:'DATA · DB 호출',
+      title:'StatefulSet → PV · Aurora',
+      analogy:'레스토랑 직원이 주방 창고에 가서 재료 꺼내 오는 것.',
+      body:'<h5>두 가지 데이터 전략</h5><ul><li><b>K8s 안</b> · StatefulSet + PV/PVC + CSI Driver. PostgreSQL/MySQL을 직접 운영.</li><li><b>관리형</b> · RDS/Aurora 등 외부 매니지드 DB. K8s에서는 SVC 또는 ExternalName으로만 추상.</li></ul><p>운영 부담을 누가 지냐의 차이. SLA 99.99%면 거의 모든 팀이 매니지드 선택.</p>',
+      pair:{k8s:'<b>StatefulSet + PV</b> · 안정적 네트워크 ID + PVC 자동 매핑. CSI Driver로 디스크 attach.', eks:'<b>Aurora PostgreSQL</b> · private subnet의 매니지드 DB. App Pod는 <code>db-host:5432</code> 환경변수로 연결. Multi-AZ 자동 페일오버.'},
+      hi:['cm','db','resp'], edges:['e14'], osi:[7], unit:'SQL · Redis · etc',
+      concepts:['StatefulSet','PV','PVC','CSI','Aurora','RDS','ElastiCache']
+    },
+    {
+      n:'16', tag:'RESPONSE · 역경로',
+      title:'응답이 같은 길을 거꾸로 돌아간다',
+      analogy:'택배가 답장 편지를 들고 같은 우체국 → 같은 분류센터 → 같은 집배원을 거꾸로 거쳐 돌아오는 것.',
+      body:'<h5>역방향 흐름</h5><p>App → Envoy → veth → cni0 → kproxy(SNAT 가능) → ALB → NLB → 클라이언트.</p><ul><li><b>conntrack</b>이 NAT mapping 기억 → 응답이 같은 Pod로 매칭</li><li>NLB는 <code>preserve_client_ip=true</code>면 클라이언트 IP 유지</li><li>HTTP keep-alive면 같은 TCP에서 다음 요청 처리, 아니면 FIN/ACK 종료</li></ul>',
+      pair:{k8s:'<b>conntrack</b> · 노드 커널에 connection 상태 기록. SNAT/DNAT mapping 추적.', eks:'<b>NLB preserve_client_ip</b> · 활성 시 ALB에서 <code>X-Forwarded-For</code> 안 봐도 source IP 그대로. 차단 룰에 유리.'},
+      hi:['db','resp','client'], edges:['e15','e16'], osi:[7,4,3], unit:'TCP/HTTP response',
+      concepts:['conntrack','SNAT','TCP FIN','keep-alive','preserve_client_ip']
+    }
+  ];
+
+  /* ───── DOM 빌드 + 이벤트 ───── */
+  var root = document.getElementById('kfsFlow');
+  if (!root) return;
+
+  /* SVG 노드 + edge 그리기 */
+  function buildCanvas() {
+    var svg = root.querySelector('.kfs-canvas');
+    if (!svg) return;
+    var nodesG = svg.querySelector('#kfsNodes');
+    var edgesG = svg.querySelector('#kfsEdges');
+    if (!nodesG || !edgesG) return;
+
+    var byId = {};
+    NODES.forEach(function (n) {
+      byId[n.id] = n;
+      var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', 'kfs-node');
+      g.setAttribute('data-id', n.id);
+
+      var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('class', 'kfs-node-card ' + n.t);
+      rect.setAttribute('x', n.x); rect.setAttribute('y', n.y);
+      rect.setAttribute('width', n.w); rect.setAttribute('height', n.h);
+      rect.setAttribute('rx', 6);
+      g.appendChild(rect);
+
+      var head = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      head.setAttribute('class', 'kfs-node-head');
+      head.setAttribute('x', n.x); head.setAttribute('y', n.y);
+      head.setAttribute('width', n.w); head.setAttribute('height', 18);
+      head.setAttribute('rx', 6);
+      g.appendChild(head);
+
+      var tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('class', 'kfs-node-tag ' + n.t);
+      tag.setAttribute('x', n.x + 8); tag.setAttribute('y', n.y + 13);
+      tag.textContent = n.tag;
+      g.appendChild(tag);
+
+      var title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      title.setAttribute('class', 'kfs-node-title');
+      title.setAttribute('x', n.x + 8); title.setAttribute('y', n.y + 38);
+      title.textContent = n.title;
+      g.appendChild(title);
+
+      var sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      sub.setAttribute('class', 'kfs-node-sub');
+      sub.setAttribute('x', n.x + 8); sub.setAttribute('y', n.y + 54);
+      sub.textContent = n.sub;
+      g.appendChild(sub);
+
+      nodesG.appendChild(g);
+    });
+
+    EDGES.forEach(function (e) {
+      var a = byId[e.from], b = byId[e.to];
+      if (!a || !b) return;
+      var x1 = a.x + a.w / 2, y1 = a.y + a.h / 2;
+      var x2 = b.x + b.w / 2, y2 = b.y + b.h / 2;
+      // gentle curve
+      var midX = (x1 + x2) / 2, midY = (y1 + y2) / 2 - 8;
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'kfs-link');
+      path.setAttribute('data-id', e.id);
+      path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' Q ' + midX + ' ' + midY + ' ' + x2 + ' ' + y2);
+      path.setAttribute('marker-end', 'url(#kfsArr)');
+      edgesG.appendChild(path);
+    });
+  }
+
+  /* Scene 적용 */
+  var idx = 0;
+  function render() {
+    var s = SCENES[idx];
+    if (!s) return;
+
+    // Header
+    root.querySelector('.kfs-num .n').textContent = s.n;
+    root.querySelector('.kfs-tag').textContent = s.tag;
+    root.querySelector('.kfs-title').textContent = s.title;
+    root.querySelector('.kfs-analogy').textContent = s.analogy;
+
+    // Info body
+    var info = root.querySelector('.kfs-info');
+    var html = s.body;
+    html += '<h5>K8s ↔ EKS 매핑</h5>';
+    html += '<div class="kfs-pair">';
+    html += '<div class="kfs-pair-cell k8s"><div class="lbl">K8s vanilla</div><div class="val">' + s.pair.k8s + '</div></div>';
+    html += '<div class="kfs-pair-cell eks"><div class="lbl">EKS / AWS</div><div class="val">' + s.pair.eks + '</div></div>';
+    html += '</div>';
+    if (s.concepts && s.concepts.length) {
+      html += '<h5>핵심 개념</h5>';
+      html += '<div class="kfs-concepts">';
+      s.concepts.forEach(function (c) { html += '<span class="kfs-chip">' + c + '</span>'; });
+      html += '</div>';
+    }
+    info.innerHTML = html;
+
+    // Highlight nodes
+    root.querySelectorAll('.kfs-node').forEach(function (g) {
+      g.classList.toggle('on', s.hi.indexOf(g.dataset.id) >= 0);
+    });
+    // Highlight edges
+    root.querySelectorAll('.kfs-link').forEach(function (p) {
+      p.classList.toggle('on', s.edges && s.edges.indexOf(p.dataset.id) >= 0);
+    });
+
+    // OSI
+    root.querySelectorAll('.kfs-osi-layer').forEach(function (l) {
+      var n = parseInt(l.dataset.layer, 10);
+      l.classList.toggle('on', s.osi.indexOf(n) >= 0);
+    });
+    var unitEl = root.querySelector('.kfs-osi-unit .val');
+    if (unitEl) unitEl.textContent = s.unit || '—';
+
+    // Dots
+    root.querySelectorAll('.kfs-dot').forEach(function (d, i) {
+      d.classList.toggle('active', i === idx);
+      if (i < idx) d.classList.add('visited');
+    });
+
+    // Buttons
+    var prev = root.querySelector('[data-act=prev]');
+    var next = root.querySelector('[data-act=next]');
+    if (prev) prev.disabled = idx === 0;
+    if (next) next.disabled = idx === SCENES.length - 1;
+
+    // Persist
+    try { localStorage.setItem('k8s.v4.flow.scene', String(idx)); } catch (e) {}
+  }
+
+  function go(i) {
+    if (i < 0 || i >= SCENES.length) return;
+    idx = i;
+    render();
+  }
+
+  /* Build dots */
+  var dotsEl = root.querySelector('.kfs-dots');
+  if (dotsEl) {
+    SCENES.forEach(function (s, i) {
+      var d = document.createElement('button');
+      d.className = 'kfs-dot';
+      d.type = 'button';
+      d.textContent = s.n;
+      d.title = s.title;
+      d.addEventListener('click', function () { go(i); });
+      dotsEl.appendChild(d);
+    });
+  }
+
+  /* Buttons */
+  root.querySelectorAll('[data-act]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var act = btn.dataset.act;
+      if (act === 'prev') go(idx - 1);
+      else if (act === 'next') go(idx + 1);
+      else if (act === 'play') autoplay();
+      else if (act === 'reset') go(0);
+    });
+  });
+
+  /* Autoplay */
+  var playing = false, timer = null;
+  function autoplay() {
+    var btn = root.querySelector('[data-act=play]');
+    if (playing) {
+      playing = false; if (timer) clearTimeout(timer);
+      if (btn) btn.textContent = '▶';
+      return;
+    }
+    playing = true;
+    if (btn) btn.textContent = '⏸';
+    function step() {
+      if (!playing) return;
+      if (idx < SCENES.length - 1) { go(idx + 1); timer = setTimeout(step, 4500); }
+      else { playing = false; if (btn) btn.textContent = '▶'; }
+    }
+    timer = setTimeout(step, 4500);
+  }
+
+  /* Keyboard */
+  root.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { go(idx - 1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { go(idx + 1); e.preventDefault(); }
+  });
+  root.tabIndex = 0;
+
+  /* Step-link inside info body (for cross-references) */
+  root.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('kfs-stepto')) {
+      var n = parseInt(t.dataset.scene, 10);
+      if (!isNaN(n)) go(n - 1);
+    }
+  });
+
+  /* Init */
+  buildCanvas();
+  try {
+    var saved = localStorage.getItem('k8s.v4.flow.scene');
+    if (saved !== null) idx = Math.min(SCENES.length - 1, Math.max(0, +saved));
+  } catch (e) {}
+  render();
+
+  document.documentElement.classList.add('v4-flow-ready');
+})();
+</script>
 </body>
 </html>
