@@ -8896,5 +8896,786 @@ curl -H "Authorization: Bearer $TOKEN" \
 })();
 
 </script>
+
+<style id="ferrari-augment">
+/* ===========================================================
+ * AUGMENT v2.1 · 가독성 + 인터랙션 보강
+ * 본문 컨텐츠 0 변경 · CSS+JS로 동적 강화
+ * =========================================================== */
+
+/* SVG 컨테이너는 항상 라이트 카드(원본 SVG가 라이트 색상 하드코딩) */
+.arch-container {
+  background: #f7f7f7 !important;
+  border: 1px solid var(--line) !important;
+  position: relative;
+}
+.arch-container::before {
+  content: "🏎️ INTERACTIVE";
+  position: absolute; top: 8px; left: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  color: var(--rosso-bright);
+  letter-spacing: 0.20em;
+}
+.arch-container::after {
+  content: "▼ 박스를 탭하면 상세";
+  position: absolute; top: 8px; right: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--ink-muted);
+  letter-spacing: 0.10em;
+}
+
+/* 모든 .arch-node에 호버 시 라소 효과 */
+.arch-container .arch-node rect { transition: filter 200ms, transform 200ms; }
+.arch-container .arch-node:hover rect {
+  filter: drop-shadow(0 0 14px rgba(225,6,0,0.55)) brightness(1.06);
+}
+
+/* ===========================================================
+ * KPI STRIP · 각 파트 헤드 직후 자동 주입 (JS)
+ * =========================================================== */
+.kpi-strip {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin: 18px 0 28px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--bg-elev), var(--bg-soft));
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rosso-bright);
+  border-radius: var(--r-md);
+}
+.kpi-strip .kpi {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 4px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.kpi-strip .kpi b {
+  color: var(--rosso-bright);
+  font-weight: 700;
+  margin-right: 2px;
+}
+.kpi-strip .kpi.gold b { color: var(--modena-dark); }
+:root[data-theme="dark"] .kpi-strip .kpi.gold b { color: var(--modena); }
+
+/* ===========================================================
+ * DROPCAP · 각 파트 첫 단락 첫 글자
+ * =========================================================== */
+.dropcap::first-letter {
+  font-family: var(--font-display);
+  font-size: 4em;
+  font-weight: 800;
+  float: left;
+  line-height: 0.85;
+  margin: 0.05em 0.10em 0 0;
+  color: var(--rosso-bright);
+  text-shadow: 0 0 18px rgba(225,6,0,0.18);
+}
+@media (max-width: 720px) {
+  .dropcap::first-letter { font-size: 3em; margin-right: 0.08em; }
+}
+
+/* ===========================================================
+ * PARAGRAPH RHYTHM · 단락 사이 시각적 호흡
+ * =========================================================== */
+section.part p { position: relative; }
+section.part p + p { margin-top: 18px; }
+
+/* 단락 시작 indent 살짝 (선택적) */
+section.part h3 + p, section.part h4 + p, section.part h5 + p {
+  margin-top: 12px;
+}
+
+/* 모든 li 사이에 약한 구분선 가시화 */
+section.part ul li,
+section.part ol li {
+  padding: 4px 0;
+}
+
+/* 길게 연속된 ul (4개 이상 li)는 자동 grid */
+ul.grid-list, ol.grid-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 6px 22px;
+  list-style: none !important;
+  margin-left: 0 !important;
+}
+ul.grid-list li, ol.grid-list li {
+  position: relative;
+  padding: 6px 8px 6px 22px !important;
+  margin: 0 !important;
+  border-left: 2px solid var(--line-soft);
+  background: var(--bg-elev);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+ul.grid-list li::before, ol.grid-list li::before {
+  content: "▸";
+  position: absolute; left: 8px; top: 6px;
+  color: var(--rosso-bright);
+  font-size: 11px;
+}
+
+/* ===========================================================
+ * PULL-QUOTE · 핵심 한 줄 (자동 + 수동)
+ * =========================================================== */
+.pull-quote {
+  display: block;
+  margin: 28px auto;
+  padding: 18px 22px;
+  max-width: var(--content-w);
+  background: linear-gradient(90deg, var(--accent-soft), transparent 80%);
+  border-left: 4px solid var(--rosso-bright);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.pull-quote::before {
+  content: "❝";
+  display: inline-block;
+  font-size: 1.6em;
+  font-weight: 800;
+  color: var(--rosso-bright);
+  margin-right: 6px;
+  line-height: 0;
+  vertical-align: -0.18em;
+}
+
+/* ===========================================================
+ * CHAPTER PROGRESS DOT RAIL · 각 파트 위 H3 진행도
+ * =========================================================== */
+.chap-rail {
+  position: sticky;
+  top: calc(var(--nav-h) + 12px);
+  z-index: 20;
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 0 24px;
+  padding: 10px 14px;
+  background: rgba(10,10,10,0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 100%;
+}
+.chap-rail::-webkit-scrollbar { display: none; }
+:root[data-theme="light"] .chap-rail { background: rgba(255,255,255,0.92); }
+.chap-rail .label {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--rosso-bright);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-right: 8px;
+  border-right: 1px solid var(--line);
+}
+.chap-rail a {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  background: var(--bg-soft);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  border-bottom: none;
+  transition: color 140ms, background 140ms, border-color 140ms;
+}
+.chap-rail a::before {
+  content: ""; display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  transition: background 140ms, transform 140ms;
+}
+.chap-rail a:hover {
+  color: var(--ink);
+  background: var(--accent-soft);
+  border-bottom: none;
+}
+.chap-rail a:hover::before { background: var(--rosso-bright); transform: scale(1.4); }
+.chap-rail a.active {
+  background: var(--rosso-bright);
+  color: #fff;
+}
+.chap-rail a.active::before {
+  background: var(--modena);
+  transform: scale(1.5);
+  box-shadow: 0 0 8px var(--modena);
+}
+.chap-rail a.done::before { background: var(--ok); }
+@media (max-width: 720px) {
+  .chap-rail { padding: 8px 10px; gap: 6px; }
+  .chap-rail .label { font-size: 9px; padding-right: 6px; }
+  .chap-rail a { padding: 3px 8px; font-size: 10px; }
+}
+
+/* ===========================================================
+ * CHAPTER PREV/NEXT NAV · h3 다음 자동 삽입
+ * =========================================================== */
+.ch-nav {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin: 36px 0 8px;
+  padding: 14px 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  max-width: var(--content-w);
+}
+.ch-nav a {
+  flex: 1 1 220px;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+  transition: border-color 140ms, background 140ms, transform 140ms;
+}
+.ch-nav a:hover {
+  border-color: var(--rosso-bright);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+.ch-nav .ch-nav-key {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--rosso-bright);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ch-nav .ch-nav-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.ch-nav a.next { text-align: right; }
+.ch-nav a.disabled { opacity: 0.4; pointer-events: none; }
+
+/* ===========================================================
+ * KEYWORD HIGHLIGHTS (자동 inserted by JS)
+ * =========================================================== */
+.kw-pod, .kw-svc, .kw-deploy, .kw-ns, .kw-node, .kw-comp {
+  font-weight: 600;
+  padding: 0 3px;
+  border-radius: 3px;
+  border-bottom: 1px solid transparent;
+  transition: background 140ms, border-bottom-color 140ms;
+}
+.kw-pod   { color: var(--rosso-bright); }
+.kw-svc   { color: var(--modena-dark); }
+:root[data-theme="dark"] .kw-svc { color: var(--modena); }
+.kw-deploy{ color: #5fb3ff; }
+.kw-ns    { color: #c08fff; }
+.kw-node  { color: var(--ok); }
+.kw-comp  { color: #ff9966; }
+
+/* ===========================================================
+ * READING PROGRESS GAUGE (per-part radial, aside)
+ * =========================================================== */
+.read-gauge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 6px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+}
+.read-gauge svg { width: 22px; height: 22px; }
+.read-gauge .gp-fill { stroke: var(--rosso-bright); stroke-width: 3; fill: none; transition: stroke-dashoffset 240ms ease; }
+.read-gauge .gp-bg   { stroke: var(--line); stroke-width: 3; fill: none; }
+
+/* ===========================================================
+ * CODE BLOCK ENHANCEMENTS · line numbers + collapsible on mobile
+ * =========================================================== */
+pre.code.with-lines code {
+  display: block;
+  counter-reset: cl;
+}
+pre.code.with-lines code .ln {
+  display: inline-block;
+  width: 2.6em;
+  margin-right: 14px;
+  color: var(--ink-faint);
+  text-align: right;
+  user-select: none;
+  font-size: 0.85em;
+  border-right: 1px solid var(--line);
+  padding-right: 8px;
+  opacity: 0.6;
+}
+pre.code .code-expand {
+  position: absolute;
+  bottom: 8px; right: 12px;
+  padding: 4px 10px;
+  background: var(--rosso-bright); color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 3;
+  display: none;
+}
+pre.code.collapsed {
+  max-height: 220px; overflow: hidden;
+  position: relative;
+}
+pre.code.collapsed::after {
+  content: "";
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, var(--bg-code) 70%);
+  pointer-events: none;
+}
+pre.code.collapsed .code-expand { display: inline-block; }
+
+/* ===========================================================
+ * PART HEAD enhanced: poster bar
+ * =========================================================== */
+section.part > .part-head {
+  position: relative;
+  background: linear-gradient(90deg, rgba(225,6,0,0.06), transparent 50%);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+section.part > .part-head::after {
+  content: "";
+  position: absolute; right: -4px; top: 0; bottom: 0;
+  width: 60px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--carbon) 0 10px,
+      var(--paddock-white) 10px 20px
+    );
+  opacity: 0.08;
+  pointer-events: none;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+:root[data-theme="light"] section.part > .part-head::after { opacity: 0.06; }
+
+/* ===========================================================
+ * Part chunk separator
+ * =========================================================== */
+.part-divider {
+  height: 1px;
+  margin: 64px 0;
+  background:
+    linear-gradient(90deg, transparent, var(--rosso-bright) 30%, var(--rosso-bright) 70%, transparent);
+  position: relative;
+}
+.part-divider::before {
+  content: "🏁";
+  position: absolute;
+  top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--bg);
+  padding: 0 12px;
+  font-size: 18px;
+}
+
+/* ===========================================================
+ * SECTION TIP CARD · 각 챕터 첫 단락이 길면 옆에 자동 삽입
+ * =========================================================== */
+.tip-card {
+  background: linear-gradient(135deg, rgba(255,242,0,0.10), rgba(214,200,0,0.04));
+  border: 1px solid rgba(255,242,0,0.30);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin: 18px 0;
+  max-width: var(--content-w);
+}
+.tip-card .tip-eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  color: var(--modena-dark);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+:root[data-theme="dark"] .tip-card .tip-eyebrow { color: var(--modena); }
+.tip-card .tip-eyebrow::before { content: "💡 "; }
+.tip-card p { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; }
+
+/* ===========================================================
+ * MOBILE CHUNK · 본문 단락이 매우 길면 자동으로 더 보기
+ * =========================================================== */
+@media (max-width: 720px) {
+  section.part p {
+    font-size: 14.8px;
+    line-height: 1.72;
+    margin: 14px 0;
+  }
+  /* 단락 좌측에 살짝 액센트 */
+  section.part > h3 ~ p:first-of-type::before { display: none; }
+  /* H3 직후 첫 단락은 강조 */
+  section.part h3 + p {
+    font-size: 15.5px;
+    color: var(--ink);
+    border-left: 3px solid var(--rosso-bright);
+    padding-left: 14px;
+    background: var(--accent-soft);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    padding: 12px 14px;
+    margin: 12px 0 18px;
+  }
+}
+
+/* ===========================================================
+ * H3 LAP MARKER (라일 카운터)
+ * =========================================================== */
+section.part h3 .lap-num {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* ===========================================================
+ * Section poster effect on first .part
+ * =========================================================== */
+header.page {
+  position: relative;
+}
+header.page::after {
+  content: "";
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background:
+    repeating-linear-gradient(90deg, var(--rosso-bright) 0 18px, var(--carbon) 18px 36px);
+  opacity: 0.6;
+}
+
+/* ===========================================================
+ * Floating "Up" button
+ * =========================================================== */
+.float-up {
+  position: fixed;
+  bottom: 18px; right: 18px;
+  z-index: 92;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--rosso-bright); color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(225,6,0,0.45);
+  display: none;
+  align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+  transition: transform 140ms;
+}
+.float-up:hover { transform: translateY(-2px); }
+.float-up.show { display: inline-flex; }
+@media (max-width: 1280px) {
+  .float-up { right: 14px; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+}
+
+/* ===========================================================
+ * Tooltip stable position on mobile
+ * =========================================================== */
+@media (max-width: 720px) {
+  #termTooltip { left: 12px !important; right: 12px !important; max-width: calc(100vw - 24px); }
+}
+
+/* ===========================================================
+ * Reading time tag in part-head
+ * =========================================================== */
+.read-time {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-left: 10px;
+  padding: 2px 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+}
+.read-time::before { content: "⏱"; font-size: 11px; }
+</style>
+
+<script id="ferrari-augment-js">
+/* =======================================================================
+ * AUGMENT v2.1 RUNTIME · 본문 동적 강화
+ * 100% 비파괴: 본문 텍스트 변경 없음, 클래스/래퍼만 주입
+ * ======================================================================= */
+(function () {
+  "use strict";
+
+  /* ----------------------------------------------------------
+   * 1. 각 .part 헤드에 KPI strip + reading time
+   * ---------------------------------------------------------- */
+  document.querySelectorAll("section.part").forEach(function (part) {
+    var head = part.querySelector(".part-head");
+    if (!head) return;
+    var paragraphs = part.querySelectorAll("p").length;
+    var codes = part.querySelectorAll("pre.code, pre[data-lang], pre").length;
+    var callouts = part.querySelectorAll(".callout, .quiz, .ts-case").length;
+    var headings = part.querySelectorAll("h3, h4").length;
+    var text = part.textContent || "";
+    var minutes = Math.max(2, Math.ceil(text.length / 1100));
+
+    // KPI Strip
+    var strip = document.createElement("div");
+    strip.className = "kpi-strip";
+    strip.innerHTML =
+      '<span class="kpi"><b>' + minutes + '</b> 분 읽기</span>' +
+      '<span class="kpi"><b>' + headings + '</b> 챕터</span>' +
+      '<span class="kpi gold"><b>' + codes + '</b> 코드 블록</span>' +
+      '<span class="kpi"><b>' + paragraphs + '</b> 단락</span>' +
+      '<span class="kpi gold"><b>' + callouts + '</b> 인터랙션</span>';
+    if (head.nextSibling) head.parentNode.insertBefore(strip, head.nextSibling);
+    else head.parentNode.appendChild(strip);
+
+    // Reading time tag inside head
+    var h2 = head.querySelector("h2");
+    if (h2) {
+      var rt = document.createElement("span");
+      rt.className = "read-time";
+      rt.textContent = "약 " + minutes + "분";
+      h2.appendChild(rt);
+    }
+
+    // Dropcap to first paragraph after head
+    var firstP = strip.nextElementSibling;
+    while (firstP && firstP.tagName !== "P" && firstP.nextElementSibling) {
+      firstP = firstP.nextElementSibling;
+    }
+    if (firstP && firstP.tagName === "P" && firstP.textContent.trim().length > 60) {
+      firstP.classList.add("dropcap");
+    }
+  });
+
+  /* ----------------------------------------------------------
+   * 2. CHAPTER RAIL (sticky) · 각 파트마다 h3 카운터
+   * ---------------------------------------------------------- */
+  document.querySelectorAll("section.part").forEach(function (part) {
+    var h3s = part.querySelectorAll("h3[id]");
+    if (h3s.length < 2) return;
+    var rail = document.createElement("nav");
+    rail.className = "chap-rail";
+    rail.setAttribute("aria-label", "챕터 진행도");
+    var html = '<span class="label">LAP</span>';
+    h3s.forEach(function (h, i) {
+      var n = h.querySelector(".no");
+      var label = n ? n.textContent.trim() : (i + 1);
+      html += '<a href="#' + h.id + '" data-target="' + h.id + '">' + label + '</a>';
+    });
+    rail.innerHTML = html;
+    var head = part.querySelector(".part-head");
+    var kpi = part.querySelector(".kpi-strip");
+    if (kpi) kpi.parentNode.insertBefore(rail, kpi.nextSibling);
+    else if (head) head.parentNode.insertBefore(rail, head.nextSibling);
+  });
+
+  /* ----------------------------------------------------------
+   * 3. PREV/NEXT chapter nav · 각 h3 직전 다음 h3 시작 직전에 삽입
+   * ---------------------------------------------------------- */
+  document.querySelectorAll("section.part").forEach(function (part) {
+    var h3s = Array.from(part.querySelectorAll("h3[id]"));
+    h3s.forEach(function (h3, i) {
+      var nav = document.createElement("div");
+      nav.className = "ch-nav";
+      var prev = h3s[i - 1];
+      var next = h3s[i + 1];
+      var prevHTML = prev
+        ? '<a href="#' + prev.id + '" class="prev"><span class="ch-nav-key">◂ 이전 챕터</span><span class="ch-nav-title">' + (prev.querySelector(".no") ? prev.querySelector(".no").textContent.trim() + " · " : "") + prev.textContent.replace(/^[\d.]+\s*/, "").trim() + '</span></a>'
+        : '<a class="prev disabled"><span class="ch-nav-key">◂ 처음</span><span class="ch-nav-title">파트 시작</span></a>';
+      var nextHTML = next
+        ? '<a href="#' + next.id + '" class="next"><span class="ch-nav-key">다음 챕터 ▸</span><span class="ch-nav-title">' + (next.querySelector(".no") ? next.querySelector(".no").textContent.trim() + " · " : "") + next.textContent.replace(/^[\d.]+\s*/, "").trim() + '</span></a>'
+        : '<a class="next disabled"><span class="ch-nav-key">완료 🏁</span><span class="ch-nav-title">파트 끝</span></a>';
+      nav.innerHTML = prevHTML + nextHTML;
+
+      // Insert before next h3, or at end of part
+      var insertBefore = next || part.lastElementChild;
+      if (next) part.insertBefore(nav, next);
+      else part.appendChild(nav);
+    });
+  });
+
+  /* ----------------------------------------------------------
+   * 4. LONG UL/OL → grid-list 자동 (4개 이상 짧은 li)
+   * ---------------------------------------------------------- */
+  document.querySelectorAll("section.part ul, section.part ol").forEach(function (list) {
+    var lis = list.children;
+    if (lis.length < 4) return;
+    var allShort = true;
+    var hasNested = false;
+    for (var i = 0; i < lis.length; i++) {
+      if (lis[i].textContent.trim().length > 130) { allShort = false; break; }
+      if (lis[i].querySelector("ul, ol")) { hasNested = true; break; }
+    }
+    if (allShort && !hasNested) list.classList.add("grid-list");
+  });
+
+  /* ----------------------------------------------------------
+   * 5. CHAPTER RAIL active state via scroll-spy
+   * ---------------------------------------------------------- */
+  if ("IntersectionObserver" in window) {
+    var railLinks = {};
+    document.querySelectorAll(".chap-rail a[data-target]").forEach(function (a) {
+      railLinks[a.dataset.target] = a;
+    });
+    var seen = new Set();
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var id = e.target.id;
+        if (!railLinks[id]) return;
+        // mark previous siblings done in same rail
+        var rail = railLinks[id].closest(".chap-rail");
+        if (rail) {
+          rail.querySelectorAll("a").forEach(function (a) { a.classList.remove("active"); });
+          railLinks[id].classList.add("active");
+          // mark earlier as done
+          var found = false;
+          rail.querySelectorAll("a").forEach(function (a) {
+            if (a === railLinks[id]) { found = true; return; }
+            if (!found) a.classList.add("done");
+          });
+        }
+        seen.add(id);
+      });
+    }, { rootMargin: "-30% 0px -50% 0px" });
+    document.querySelectorAll("section.part h3[id]").forEach(function (h) { io.observe(h); });
+  }
+
+  /* ----------------------------------------------------------
+   * 6. CODE BLOCK · line numbers + mobile collapse
+   * ---------------------------------------------------------- */
+  document.querySelectorAll("pre.code code, pre[data-lang] code, pre code").forEach(function (code) {
+    if (code.dataset.lined === "1") return;
+    var pre = code.parentElement;
+    if (!pre || pre.tagName !== "PRE") return;
+
+    // Wrap each line with ln marker
+    var html = code.innerHTML;
+    // Skip if already wrapped
+    if (html.indexOf('class="ln"') >= 0) return;
+    var lines = html.split("\n");
+    if (lines.length < 4) return;
+    var pad = String(lines.length).length;
+    var withLines = lines.map(function (line, i) {
+      var n = String(i + 1).padStart(pad, " ");
+      return '<span class="ln">' + n + '</span>' + line;
+    }).join("\n");
+    code.innerHTML = withLines;
+    code.dataset.lined = "1";
+    pre.classList.add("with-lines");
+
+    // Mobile collapse if too tall
+    if (window.innerWidth <= 720 && lines.length > 14) {
+      pre.classList.add("collapsed");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-expand";
+      btn.textContent = "Expand ▾";
+      btn.addEventListener("click", function () {
+        pre.classList.remove("collapsed");
+        btn.remove();
+      });
+      pre.appendChild(btn);
+    }
+  });
+
+  /* ----------------------------------------------------------
+   * 7. SVG dark-mode safety: arch-container always light card
+   *    (CSS handles this; ensure SVG fills/strokes don't get overridden)
+   * ---------------------------------------------------------- */
+  // No-op: handled in CSS
+
+  /* ----------------------------------------------------------
+   * 8. FLOAT-UP button
+   * ---------------------------------------------------------- */
+  var fu = document.createElement("button");
+  fu.className = "float-up";
+  fu.type = "button";
+  fu.setAttribute("aria-label", "맨 위로");
+  fu.innerHTML = "▲";
+  fu.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.body.appendChild(fu);
+  document.addEventListener("scroll", function () {
+    if (window.scrollY > 600) fu.classList.add("show");
+    else fu.classList.remove("show");
+  }, { passive: true });
+
+  /* ----------------------------------------------------------
+   * 9. KEYBOARD shortcuts: J/K (down/up chapter), G (top), Home (top)
+   * ---------------------------------------------------------- */
+  var headings = Array.from(document.querySelectorAll("section.part h3[id], section.part > .part-head h2"));
+  function jumpRel(dir) {
+    var y = window.pageYOffset + 100;
+    var idx = -1;
+    for (var i = 0; i < headings.length; i++) {
+      var ty = headings[i].getBoundingClientRect().top + window.pageYOffset;
+      if (ty < y - 5) idx = i;
+      else break;
+    }
+    var next = headings[idx + dir];
+    if (!next) return;
+    var top = next.getBoundingClientRect().top + window.pageYOffset - 80;
+    window.scrollTo({ top: top, behavior: "smooth" });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "j" || e.key === "J") { e.preventDefault(); jumpRel(1); }
+    else if (e.key === "k" || e.key === "K") { e.preventDefault(); jumpRel(-1); }
+    else if (e.key === "g" || e.key === "G") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  });
+
+  /* ----------------------------------------------------------
+   * 10. PARAGRAPH dropcap polish: only first .part dropcap
+   * ---------------------------------------------------------- */
+  // Already added in step 1; nothing else.
+
+  /* ----------------------------------------------------------
+   * 11. AUTO PULL-QUOTE: 한 단락에 strong 텍스트가 매우 짧고 임팩트 있으면 자동 추출
+   * Currently disabled — too risky to misinterpret. Authors can add manually.
+   * ---------------------------------------------------------- */
+
+  /* ----------------------------------------------------------
+   * 12. Re-bind smooth scroll for new ch-nav and chap-rail
+   * ---------------------------------------------------------- */
+  document.querySelectorAll(".ch-nav a[href^='#'], .chap-rail a[href^='#']").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var id = a.getAttribute("href").slice(1);
+      var t = document.getElementById(id);
+      if (!t) return;
+      e.preventDefault();
+      var top = t.getBoundingClientRect().top + window.pageYOffset - 80;
+      window.scrollTo({ top: top, behavior: "smooth" });
+      if (history.pushState) history.pushState(null, null, "#" + id);
+    });
+  });
+
+  document.documentElement.classList.add("augmented-v21");
+})();
+</script>
 </body>
 </html>
