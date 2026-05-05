@@ -2127,6 +2127,33 @@ cat nginx-inspect/manifest.json | jq
     </ol>
     <div class="explanation">CPU 주파수·모델·코어 수는 네임스페이스로 숨길 수 없습니다. 컨테이너 안에서 <code>/proc/cpuinfo</code>를 보면 호스트와 같은 값이 나옵니다.</div>
   </div>
+
+  <h4>🏎️ Pit Lane Lab — Pod 탄생을 5단계로 직접 따라가기</h4>
+  <p>위에서 이론으로 본 cgroup·unshare·pivot_root가 실제 셸에서는 어떻게 모이는지를 단계별로 시뮬레이션합니다. 각 탭의 ▸ Run을 누르면 실제 출력 흐름이 타이핑됩니다 — 모든 탭을 모두 실행하면 트로피.</p>
+  <div class="klab" id="klab-pod-lifecycle" data-lab="pod-lifecycle">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span>
+      <span class="klab-glyph x">×</span>
+      <span class="klab-glyph tri">△</span>
+      <span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · POD BIRTH FROM CS · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. Cgroup create</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. Unshare ns</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. pivot_root</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. exec entrypoint</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. OOMKill replay</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
+
   <div class="chapter-end">— END OF PART 1 —</div>
 </section>
 
@@ -2142,131 +2169,122 @@ cat nginx-inspect/manifest.json | jq
     Kubernetes 클러스터는 크게 <strong>컨트롤 플레인(Control Plane)</strong>과 <strong>워커 노드(Worker Node)</strong> 두 덩어리로 나뉩니다.
     아래 다이어그램의 각 상자를 클릭하면 우측에서 해당 컴포넌트의 상세 설명이 슬라이드로 들어옵니다.
   </p>
-  <div class="arch-container" id="archDiagram">
+  <div class="arch-container svg-frame" id="archDiagram">
     <svg viewBox="0 0 820 520" role="img" aria-label="Kubernetes 아키텍처 다이어그램">
       <defs>
-        <linearGradient id="gCP" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="#e7f0fa"/>
-          <stop offset="100%" stop-color="#c7d8ec"/>
-        </linearGradient>
-        <linearGradient id="gNode" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="#f3f7fc"/>
-          <stop offset="100%" stop-color="#dde9f4"/>
-        </linearGradient>
         <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d6fb8"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
         </marker>
       </defs>
-
       <!-- Control plane boundary -->
-      <rect x="20" y="20" width="780" height="210" rx="8" fill="url(#gCP)" stroke="#1d6fb8" stroke-width="2" stroke-dasharray="6 4"/>
-      <text x="40" y="46" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700" letter-spacing="3">CONTROL PLANE</text>
+      <rect x="20" y="20" width="780" height="210" rx="10" class="svg-tint-fill svg-stroke" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="40" y="46" class="svg-text" font-size="11" font-weight="700" letter-spacing="3" style="fill:var(--rosso-bright);">CONTROL PLANE</text>
 
-      <!-- kube-apiserver -->
+      <!-- kube-apiserver (focal) -->
       <g class="arch-node" data-component="apiserver">
-        <rect x="300" y="70" width="220" height="60" rx="6" fill="#326ce5" stroke="#0a3d6b" stroke-width="2"/>
-        <text x="410" y="100" text-anchor="middle" fill="white" font-family="JetBrains Mono" font-size="13" font-weight="700">kube-apiserver</text>
-        <text x="410" y="118" text-anchor="middle" fill="#d7e7f7" font-family="JetBrains Mono" font-size="10">REST front · Admission · Auth</text>
+        <rect x="300" y="70" width="220" height="60" rx="6" class="svg-accent-fill" stroke="none"/>
+        <text x="410" y="98" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#fff">kube-apiserver</text>
+        <text x="410" y="116" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="rgba(255,255,255,0.86)">REST front · Admission · Auth</text>
       </g>
 
       <!-- etcd -->
       <g class="arch-node" data-component="etcd">
-        <rect x="40" y="150" width="160" height="60" rx="6" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="120" y="180" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="13" font-weight="700">etcd</text>
-        <text x="120" y="198" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">Raft KV store</text>
+        <rect x="40" y="150" width="160" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="120" y="178" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">etcd</text>
+        <text x="120" y="196" text-anchor="middle" class="svg-muted" font-size="10">Raft KV store</text>
       </g>
 
       <!-- scheduler -->
       <g class="arch-node" data-component="scheduler">
-        <rect x="220" y="150" width="160" height="60" rx="6" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="300" y="180" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="13" font-weight="700">kube-scheduler</text>
-        <text x="300" y="198" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">Filter · Score · Bind</text>
+        <rect x="220" y="150" width="160" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="300" y="178" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">kube-scheduler</text>
+        <text x="300" y="196" text-anchor="middle" class="svg-muted" font-size="10">Filter · Score · Bind</text>
       </g>
 
       <!-- controller-manager -->
       <g class="arch-node" data-component="cm">
-        <rect x="400" y="150" width="220" height="60" rx="6" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="510" y="180" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="13" font-weight="700">kube-controller-manager</text>
-        <text x="510" y="198" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">40+ reconcile loops</text>
+        <rect x="400" y="150" width="220" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="510" y="178" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">kube-controller-manager</text>
+        <text x="510" y="196" text-anchor="middle" class="svg-muted" font-size="10">40+ reconcile loops</text>
       </g>
 
       <!-- cloud-controller-manager -->
       <g class="arch-node" data-component="ccm">
-        <rect x="640" y="150" width="150" height="60" rx="6" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="715" y="180" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">cloud-controller</text>
-        <text x="715" y="198" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">LB · Route · Node</text>
+        <rect x="640" y="150" width="150" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="715" y="178" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">cloud-controller</text>
+        <text x="715" y="196" text-anchor="middle" class="svg-muted" font-size="10">LB · Route · Node</text>
       </g>
 
-      <!-- edges between CP -->
-      <path d="M 200 180 L 222 180" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 380 180 L 400 180" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 620 180 L 640 180" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 300 150 Q 300 130 410 130" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 510 150 Q 510 130 410 130" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 120 150 Q 120 130 300 130" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+      <!-- CP edges -->
+      <path d="M 200 180 L 222 180" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 380 180 L 400 180" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 620 180 L 640 180" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 300 150 Q 300 130 410 130" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 510 150 Q 510 130 410 130" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 120 150 Q 120 130 300 130" class="svg-edge" marker-end="url(#arrow)"/>
 
       <!-- Node 1 -->
-      <rect x="20" y="260" width="380" height="240" rx="8" fill="url(#gNode)" stroke="#6e86a6" stroke-width="2" stroke-dasharray="6 4"/>
-      <text x="40" y="286" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700" letter-spacing="3">WORKER NODE 1</text>
+      <rect x="20" y="260" width="380" height="240" rx="10" class="svg-tint-fill svg-stroke-soft" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="40" y="286" class="svg-muted" font-size="11" font-weight="700" letter-spacing="3">WORKER NODE 1</text>
 
       <g class="arch-node" data-component="kubelet">
-        <rect x="40" y="300" width="160" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="120" y="325" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">kubelet</text>
-        <text x="120" y="342" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">PodSpec → CRI</text>
+        <rect x="40" y="300" width="160" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="120" y="324" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">kubelet</text>
+        <text x="120" y="340" text-anchor="middle" class="svg-muted" font-size="10">PodSpec → CRI</text>
       </g>
       <g class="arch-node" data-component="kubeproxy">
-        <rect x="220" y="300" width="160" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="300" y="325" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">kube-proxy</text>
-        <text x="300" y="342" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">iptables · IPVS</text>
+        <rect x="220" y="300" width="160" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="300" y="324" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">kube-proxy</text>
+        <text x="300" y="340" text-anchor="middle" class="svg-muted" font-size="10">iptables · IPVS</text>
       </g>
       <g class="arch-node" data-component="runtime">
-        <rect x="40" y="370" width="340" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="210" y="395" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">Container Runtime (containerd)</text>
-        <text x="210" y="412" text-anchor="middle" fill="#6e86a6" font-family="JetBrains Mono" font-size="10">runc · shim · OCI</text>
+        <rect x="40" y="370" width="340" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="210" y="394" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Container Runtime (containerd)</text>
+        <text x="210" y="410" text-anchor="middle" class="svg-muted" font-size="10">runc · shim · OCI</text>
       </g>
       <g class="arch-node" data-component="podA">
-        <rect x="40" y="440" width="100" height="45" rx="5" fill="#d7e7f7" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="90" y="468" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="11" font-weight="700">Pod A</text>
+        <rect x="40" y="440" width="100" height="45" rx="5" class="svg-flag-fill" stroke="none"/>
+        <text x="90" y="467" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod A</text>
       </g>
       <g class="arch-node" data-component="podB">
-        <rect x="160" y="440" width="100" height="45" rx="5" fill="#d7e7f7" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="210" y="468" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="11" font-weight="700">Pod B</text>
+        <rect x="160" y="440" width="100" height="45" rx="5" class="svg-flag-fill" stroke="none"/>
+        <text x="210" y="467" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod B</text>
       </g>
       <g class="arch-node" data-component="podC">
-        <rect x="280" y="440" width="100" height="45" rx="5" fill="#d7e7f7" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="330" y="468" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="11" font-weight="700">Pod C</text>
+        <rect x="280" y="440" width="100" height="45" rx="5" class="svg-flag-fill" stroke="none"/>
+        <text x="330" y="467" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod C</text>
       </g>
 
       <!-- Node 2 -->
-      <rect x="420" y="260" width="380" height="240" rx="8" fill="url(#gNode)" stroke="#6e86a6" stroke-width="2" stroke-dasharray="6 4"/>
-      <text x="440" y="286" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700" letter-spacing="3">WORKER NODE 2</text>
+      <rect x="420" y="260" width="380" height="240" rx="10" class="svg-tint-fill svg-stroke-soft" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="440" y="286" class="svg-muted" font-size="11" font-weight="700" letter-spacing="3">WORKER NODE 2</text>
 
       <g class="arch-node" data-component="kubelet">
-        <rect x="440" y="300" width="160" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="520" y="325" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">kubelet</text>
+        <rect x="440" y="300" width="160" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="520" y="324" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">kubelet</text>
       </g>
       <g class="arch-node" data-component="kubeproxy">
-        <rect x="620" y="300" width="160" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="700" y="325" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">kube-proxy</text>
+        <rect x="620" y="300" width="160" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="700" y="324" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">kube-proxy</text>
       </g>
       <g class="arch-node" data-component="runtime">
-        <rect x="440" y="370" width="340" height="50" rx="5" fill="#ffffff" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="610" y="395" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="12" font-weight="700">Container Runtime (containerd)</text>
+        <rect x="440" y="370" width="340" height="50" rx="5" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="610" y="394" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Container Runtime (containerd)</text>
       </g>
       <g class="arch-node" data-component="podD">
-        <rect x="440" y="440" width="100" height="45" rx="5" fill="#d7e7f7" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="490" y="468" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="11" font-weight="700">Pod D</text>
+        <rect x="440" y="440" width="100" height="45" rx="5" class="svg-flag-fill" stroke="none"/>
+        <text x="490" y="467" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod D</text>
       </g>
       <g class="arch-node" data-component="podE">
-        <rect x="560" y="440" width="100" height="45" rx="5" fill="#d7e7f7" stroke="#1d6fb8" stroke-width="2"/>
-        <text x="610" y="468" text-anchor="middle" fill="#0a3d6b" font-family="JetBrains Mono" font-size="11" font-weight="700">Pod E</text>
+        <rect x="560" y="440" width="100" height="45" rx="5" class="svg-flag-fill" stroke="none"/>
+        <text x="610" y="467" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod E</text>
       </g>
 
       <!-- CP → Node arrows -->
-      <path d="M 120 210 L 120 300" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-      <path d="M 520 210 L 520 300" stroke="#1d6fb8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+      <path d="M 120 210 L 120 300" class="svg-edge" marker-end="url(#arrow)"/>
+      <path d="M 520 210 L 520 300" class="svg-edge" marker-end="url(#arrow)"/>
     </svg>
-    <div class="legend">각 상자 클릭 시 상세 패널 표시 · 점선 박스는 논리 경계 · 화살표는 주요 gRPC/HTTPS 흐름</div>
+    <div class="legend">각 상자를 탭/클릭하면 상세 패널이 슬라이드 인 · 점선 박스는 논리 경계 · 빨간 선은 주요 gRPC/HTTPS 흐름</div>
   </div>
   <p>
     이 그림에서 기억해야 할 두 가지 사실이 있습니다. 첫째, <strong>etcd와 직접 대화하는 것은 kube-apiserver뿐</strong>입니다.
@@ -2350,6 +2368,45 @@ cat nginx-inspect/manifest.json | jq
   </div>
 
   <h3 id="p2-c4"><span class="no">2.4</span>Watch·Informer 패턴</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 14px;">
+    <svg viewBox="0 0 760 220" role="img" aria-label="Watch Informer 흐름">
+      <defs>
+        <marker id="wiArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+      <g>
+        <rect x="20" y="60" width="120" height="56" rx="6" class="svg-accent-fill" stroke="none"/>
+        <text x="80" y="84" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="800" fill="#fff">apiserver</text>
+        <text x="80" y="102" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="rgba(255,255,255,0.92)">/watch · long-poll</text>
+      </g>
+      <path d="M 140 88 L 175 88" class="svg-edge" marker-end="url(#wiArr)"/>
+      <g><rect x="180" y="60" width="120" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="240" y="84" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Reflector</text>
+        <text x="240" y="102" text-anchor="middle" class="svg-muted" font-size="10">decode · resourceVersion++</text></g>
+      <path d="M 300 88 L 335 88" class="svg-edge" marker-end="url(#wiArr)"/>
+      <g><rect x="340" y="60" width="120" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="400" y="84" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">DeltaFIFO</text>
+        <text x="400" y="102" text-anchor="middle" class="svg-muted" font-size="10">queue · dedupe</text></g>
+      <path d="M 460 88 L 495 88" class="svg-edge" marker-end="url(#wiArr)"/>
+      <g><rect x="500" y="60" width="120" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="560" y="84" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Indexer</text>
+        <text x="560" y="102" text-anchor="middle" class="svg-muted" font-size="10">in-memory cache</text></g>
+      <path d="M 620 88 L 655 88" class="svg-edge" marker-end="url(#wiArr)"/>
+      <g><rect x="660" y="60" width="80" height="56" rx="6" class="svg-flag-fill" stroke="none"/>
+        <text x="700" y="86" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Handler</text>
+        <text x="700" y="102" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="#0a0a0a">Add/Update/Del</text></g>
+
+      <!-- workqueue arrow -->
+      <path d="M 700 116 Q 700 170 400 170 Q 100 170 80 116" class="svg-edge" stroke-dasharray="4 3" marker-end="url(#wiArr)"/>
+      <text x="400" y="190" text-anchor="middle" class="svg-muted" font-size="10" font-weight="700">workqueue → reconcile() → API write (rev++)</text>
+
+      <text x="20" y="38" class="svg-muted" font-size="11" letter-spacing="2" font-weight="700">LIST-WATCH 파이프라인</text>
+    </svg>
+    <div class="legend">apiserver의 Watch 스트림이 Reflector → DeltaFIFO → Indexer → Handler 체인을 거쳐 컨트롤러의 reconcile을 호출</div>
+  </div>
+
   <p>
     Kubernetes 내부에서 가장 많이 쓰이는 패턴 하나만 꼽으라면 <strong>List-Watch</strong>입니다.
     모든 컨트롤러(kube-controller-manager의 40여 개 + 사용자 Operator들)가 이 패턴으로 동작합니다.
@@ -2387,6 +2444,52 @@ Worker goroutine    ← queue에서 꺼내 reconcile() 수행</div>
   </p>
 
   <h3 id="p2-c5"><span class="no">2.5</span>Admission 체인</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 14px;">
+    <svg viewBox="0 0 760 200" role="img" aria-label="Admission 체인">
+      <defs>
+        <marker id="adArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+      <text x="20" y="40" class="svg-muted" font-size="11" letter-spacing="2" font-weight="700">REQUEST GATE CHAIN</text>
+
+      <g><rect x="20" y="70" width="100" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="70" y="94" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Authn</text>
+        <text x="70" y="112" text-anchor="middle" class="svg-muted" font-size="9">cert · token · sa</text></g>
+      <path d="M 120 98 L 145 98" class="svg-edge" marker-end="url(#adArr)"/>
+
+      <g><rect x="150" y="70" width="100" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="200" y="94" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Authz (RBAC)</text>
+        <text x="200" y="112" text-anchor="middle" class="svg-muted" font-size="9">verb · resource</text></g>
+      <path d="M 250 98 L 275 98" class="svg-edge" marker-end="url(#adArr)"/>
+
+      <g><rect x="280" y="70" width="120" height="56" rx="6" class="svg-flag-fill" stroke="none"/>
+        <text x="340" y="94" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Mutating</text>
+        <text x="340" y="112" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="#0a0a0a">사이드카 · default 주입</text></g>
+      <path d="M 400 98 L 425 98" class="svg-edge" marker-end="url(#adArr)"/>
+
+      <g><rect x="430" y="70" width="100" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+        <text x="480" y="94" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">Schema</text>
+        <text x="480" y="112" text-anchor="middle" class="svg-muted" font-size="9">OpenAPI v3</text></g>
+      <path d="M 530 98 L 555 98" class="svg-edge" marker-end="url(#adArr)"/>
+
+      <g><rect x="560" y="70" width="120" height="56" rx="6" class="svg-flag-fill" stroke="none"/>
+        <text x="620" y="94" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Validating</text>
+        <text x="620" y="112" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="#0a0a0a">policy · OPA</text></g>
+      <path d="M 680 98 L 705 98" class="svg-edge" marker-end="url(#adArr)"/>
+
+      <g><rect x="710" y="70" width="40" height="56" rx="6" class="svg-accent-fill" stroke="none"/>
+        <text x="730" y="94" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#fff">etcd</text>
+        <text x="730" y="112" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="rgba(255,255,255,0.92)">PUT</text></g>
+
+      <!-- reject path -->
+      <path d="M 340 126 L 340 170 L 70 170 L 70 126" class="svg-edge" stroke-dasharray="4 3" marker-end="url(#adArr)"/>
+      <text x="200" y="186" text-anchor="middle" class="svg-muted" font-size="10" font-weight="700">REJECT — 어느 단계든 거부 시 client에 4xx</text>
+    </svg>
+    <div class="legend">5단계 게이트 — 한 곳이라도 거부하면 etcd에 도달하지 못함. Mutating은 객체 변형, Validating은 검사만.</div>
+  </div>
+
   <p>
     Authentication/Authorization을 통과한 요청은 <strong>Admission</strong> 단계에서 한 번 더 검열됩니다. 두 종류가 있습니다.
   </p>
@@ -2451,6 +2554,40 @@ Worker goroutine    ← queue에서 꺼내 reconcile() 수행</div>
     높은 우선순위 Pod가 스케줄링에 실패하면, 낮은 우선순위 Pod를 같은 노드에서 evict하고 자리를 만들 수 있습니다.
     <code>PriorityClass</code>로 우선순위를 부여하며, 기본 컴포넌트(CoreDNS 등)는 <code>system-cluster-critical</code> (2000000000)로 보호됩니다.
   </p>
+
+  <h4>🏎️ Pit Lane Lab — 스케줄러가 한 Pod를 어떻게 결정하는가</h4>
+  <p>위에서 본 Filter→Score→Bind 흐름을 단일 시나리오로 따라갑니다. 5개 탭, 각각 ▸ Run.</p>
+  <div class="klab" id="klab-scheduler" data-lab="scheduler">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · SCHEDULER DECISION · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. Watch unscheduled</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. Filter</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. Score</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. Bind</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. Preemption</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
+
+  <div class="k8w" id="widget-scheduler">
+    <div class="k8w-title">Scheduler Sandbox · 노드 3개 + Pod 1개로 직접 스케줄링</div>
+    <div class="k8w-sub">슬라이더로 노드 자원·taint·label을 조정하고, Pod의 requests/affinity/toleration을 바꿔 보세요. ▸ Schedule 버튼으로 실제 K8s가 쓰는 Filter→Score→Bind 결정을 시뮬레이션합니다.</div>
+    <div class="k8w-grid cols-3" data-nodes></div>
+    <div data-pod style="margin-top:12px;"></div>
+    <div class="k8w-actions">
+      <button class="k8w-go" type="button">▸ Schedule</button>
+    </div>
+    <div class="k8w-out"></div>
+  </div>
 
   <h3 id="p2-c7"><span class="no">2.7</span>kubelet의 24시간</h3>
   <p>
@@ -2535,6 +2672,49 @@ Worker goroutine    ← queue에서 꺼내 reconcile() 수행</div>
     <p class="summary">Pod부터 RBAC까지 — YAML 필드의 의미, 내부 동작, 그리고 가상 kubectl로 즉시 시도해볼 수 있는 실습을 묶어 풀어냅니다.</p>
   </div>
   <h3 id="p3-c1"><span class="no">3.1</span>Pod · Kubernetes의 최소 단위</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 14px;">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Pod 상태 머신">
+      <defs>
+        <marker id="psArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+
+      <!-- 5 states -->
+      <g><rect x="20" y="80" width="120" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+         <text x="80" y="106" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">Pending</text>
+         <text x="80" y="124" text-anchor="middle" class="svg-muted" font-size="9">scheduled? imagePull?</text></g>
+      <path d="M 140 110 L 165 110" class="svg-edge" marker-end="url(#psArr)"/>
+
+      <g><rect x="170" y="80" width="140" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+         <text x="240" y="104" text-anchor="middle" class="svg-text" font-size="12" font-weight="700">ContainerCreating</text>
+         <text x="240" y="122" text-anchor="middle" class="svg-muted" font-size="9">CRI · cgroup · ns</text></g>
+      <path d="M 310 110 L 335 110" class="svg-edge" marker-end="url(#psArr)"/>
+
+      <g><rect x="340" y="80" width="120" height="60" rx="6" class="svg-accent-fill" stroke="none"/>
+         <text x="400" y="106" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#fff">Running</text>
+         <text x="400" y="124" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="rgba(255,255,255,0.92)">readiness gate</text></g>
+      <path d="M 460 110 L 485 110" class="svg-edge" marker-end="url(#psArr)"/>
+
+      <g><rect x="490" y="80" width="120" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+         <text x="550" y="106" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">Terminating</text>
+         <text x="550" y="124" text-anchor="middle" class="svg-muted" font-size="9">SIGTERM → KILL</text></g>
+
+      <!-- branches -->
+      <path d="M 400 140 L 400 180" class="svg-edge" stroke-dasharray="4 3" marker-end="url(#psArr)"/>
+      <g><rect x="340" y="180" width="120" height="44" rx="6" class="svg-flag-fill" stroke="none"/>
+         <text x="400" y="208" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="800" fill="#0a0a0a">Succeeded · Failed</text></g>
+
+      <!-- restart loop -->
+      <path d="M 400 80 Q 400 40 240 40 Q 80 40 80 80" class="svg-edge" stroke-dasharray="4 3" marker-end="url(#psArr)"/>
+      <text x="240" y="32" text-anchor="middle" class="svg-muted" font-size="10" font-weight="700">RestartPolicy=Always · CrashLoopBackOff</text>
+
+      <text x="20" y="60" class="svg-muted" font-size="11" letter-spacing="2" font-weight="700">POD STATE MACHINE</text>
+    </svg>
+    <div class="legend">상자 위 흐름은 정상 경로 · 점선은 분기 · 빨간 박스(Running)는 readiness 통과 후 endpointslice에 등록</div>
+  </div>
+
   <p>
     Kubernetes는 개별 컨테이너를 스케줄링하지 않습니다. <strong>Pod</strong>라는 묶음을 스케줄링합니다. Pod는
     "함께 같은 네트워크·스토리지를 공유하는 하나 이상의 컨테이너"입니다. 대부분의 Pod는 컨테이너 하나짜리지만,
@@ -2554,7 +2734,7 @@ Worker goroutine    ← queue에서 꺼내 reconcile() 수행</div>
     (2) 좀비 프로세스 수확(<code>wait()</code>). 이미지는 수십 KB에 불과한 C 바이너리입니다.
   </p>
   <h4>샘플 Pod YAML</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · Pod.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: Pod
 metadata:
   name: web
@@ -2590,7 +2770,7 @@ spec:
   volumes:
   - name: logs
     emptyDir: {}
-</code></pre>
+</code></pre></details>
   <h4>requests vs limits — QoS의 근원</h4>
   <p>
     <code>requests</code>는 <strong>스케줄링에 사용되는 최소 보장량</strong>입니다. 스케줄러는 이 값을 보고 노드의 남은 리소스를 계산합니다.
@@ -2646,7 +2826,7 @@ spec:
   </table>
 
   <h4>Deployment 해부</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: apps/v1
+  <details class="manifest"><summary>VIEW MANIFEST · Deployment.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: apps/v1
 kind: Deployment
 metadata: { name: web }
 spec:
@@ -2664,7 +2844,7 @@ spec:
     spec:
       containers:
       - { name: web, image: myapp:v1.2.3 }
-</code></pre>
+</code></pre></details>
   <p>
     Deployment 컨트롤러는 변경 시 새 ReplicaSet을 만들고, 옛 RS의 Pod 수를 서서히 줄이며 새 RS의 수를 늘립니다.
     롤백은 옛 RS에 다시 스케일을 올리는 식이라 즉시입니다. <code>kubectl rollout undo</code>를 쓰면 이 동작을 트리거합니다.
@@ -2674,7 +2854,7 @@ spec:
     Deployment와 달리 StatefulSet의 Pod는 <code>web-0, web-1, web-2</code>처럼 고유 이름을 갖고, <strong>순서대로 생성되고 역순으로 삭제</strong>됩니다.
     각 Pod는 자기 PVC를 가지며, Pod가 재생성돼도 같은 볼륨에 다시 붙습니다. 이 정체성이 DB·큐 같은 상태저장 시스템에 필수적입니다.
   </p>
-  <pre class="code"><code class="language-yaml">apiVersion: apps/v1
+  <details class="manifest"><summary>VIEW MANIFEST · StatefulSet.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: apps/v1
 kind: StatefulSet
 metadata: { name: postgres }
 spec:
@@ -2694,7 +2874,7 @@ spec:
       accessModes: ["ReadWriteOnce"]
       resources: { requests: { storage: 100Gi } }
       storageClassName: gp3
-</code></pre>
+</code></pre></details>
   <p>
     <code>volumeClaimTemplates</code>이 포인트입니다. 각 Pod마다 <code>data-postgres-0</code>, <code>data-postgres-1</code> PVC가
     자동 생성되고, 해당 Pod에만 바인드됩니다.
@@ -2717,6 +2897,29 @@ spec:
     <li><code>ttlSecondsAfterFinished</code> — 완료된 Job을 자동 삭제할 시간</li>
   </ul>
 
+  <h4>🏎️ Pit Lane Lab — Deployment Rollout 5단계</h4>
+  <p>apply → ReplicaSet → rolling 25/25 → readiness gate → rollback. YAML 매니페스트를 보기 전에 흐름부터 손에 익혀 보세요. 각 탭의 ▸ Run.</p>
+  <div class="klab" id="klab-deploy-rollout" data-lab="deploy-rollout">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · DEPLOYMENT ROLLOUT · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. Apply</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. RS create</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. Rolling 25/25</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. Readiness gate</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. Rollback</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
+
   <h3 id="p3-c3"><span class="no">3.3</span>Service와 DNS · 서비스 디스커버리</h3>
   <p>
     Pod의 IP는 언제든 바뀝니다(죽고 재생성). 그래서 안정된 접근 지점이 필요하고, 그것이 <strong>Service</strong>입니다.
@@ -2733,7 +2936,7 @@ spec:
     </tbody>
   </table>
   <h4>Service의 예시</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · Service.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: Service
 metadata: { name: web }
 spec:
@@ -2744,7 +2947,7 @@ spec:
     port: 80            # Service의 포트
     targetPort: 8080    # Pod의 containerPort
     protocol: TCP
-</code></pre>
+</code></pre></details>
   <h4>Endpoints vs EndpointSlice</h4>
   <p>
     Service를 만들면 <strong>Endpoints</strong>(구) 또는 <strong>EndpointSlice</strong>(신, 1.21+ 기본)가 함께 생성되며, 여기에 매칭된 Pod의 IP·포트 목록이 담깁니다.
@@ -2773,7 +2976,7 @@ spec:
     Service는 L4입니다. HTTP 경로 기반 라우팅, TLS 종결, 호스트 기반 분기 같은 L7 기능이 필요하면 <strong>Ingress</strong>를 씁니다.
     Ingress는 "규칙"일 뿐이고, 실제로 리버스 프록시를 돌리는 것은 <strong>Ingress Controller</strong>(nginx, Traefik, Istio Gateway, AWS LB Controller 등)입니다.
   </p>
-  <pre class="code"><code class="language-yaml">apiVersion: networking.k8s.io/v1
+  <details class="manifest"><summary>VIEW MANIFEST · Ingress.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: shop
@@ -2794,7 +2997,7 @@ spec:
       - path: /
         pathType: Prefix
         backend: { service: { name: web, port: { number: 80 } } }
-</code></pre>
+</code></pre></details>
   <h4>Gateway API — Ingress의 후계자</h4>
   <p>
     Ingress는 2015년 알파 시절 디자인이라 한계가 많습니다. 주석(annotation)으로 모든 고급 기능을 표현하다 보니 컨트롤러마다 호환되지 않고,
@@ -2806,7 +3009,7 @@ spec:
     <li><strong>HTTPRoute / TCPRoute / TLSRoute</strong> — 앱팀이 만드는 라우팅 규칙</li>
     <li>역할 분리가 명시적이고, 타입이 강해 주석 의존이 사라짐</li>
   </ul>
-  <pre class="code"><code class="language-yaml">apiVersion: gateway.networking.k8s.io/v1
+  <details class="manifest"><summary>VIEW MANIFEST · Gateway.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata: { name: main }
 spec:
@@ -2831,14 +3034,14 @@ spec:
     backendRefs: [{ name: api, port: 80 }]
   - matches: [{ path: { type: PathPrefix, value: / } }]
     backendRefs: [{ name: web, port: 80 }]
-</code></pre>
+</code></pre></details>
 
   <h3 id="p3-c5"><span class="no">3.5</span>ConfigMap과 Secret</h3>
   <p>
     애플리케이션 설정과 이미지를 분리하는 것이 12-factor의 원칙입니다. Kubernetes는 두 리소스로 이 분리를 제공합니다.
   </p>
   <h4>ConfigMap — 평문 설정</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · ConfigMap.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: ConfigMap
 metadata: { name: app-config }
 data:
@@ -2846,9 +3049,9 @@ data:
   FEATURE_X: "true"
   nginx.conf: |
     server { listen 80; location / { return 200 "hi"; } }
-</code></pre>
+</code></pre></details>
   <p>사용 방법 세 가지:</p>
-  <pre class="code"><code class="language-yaml"># 1) 환경변수로 주입
+  <details class="manifest"><summary>VIEW MANIFEST · # 1) 환경변수로 주입.yaml</summary><pre class="code"><code class="language-yaml"># 1) 환경변수로 주입
 spec.containers[].envFrom:
 - configMapRef: { name: app-config }
 
@@ -2863,7 +3066,7 @@ spec.containers[].volumeMounts:
 spec.containers[].env:
 - name: LOG_LEVEL
   valueFrom: { configMapKeyRef: { name: app-config, key: LOG_LEVEL } }
-</code></pre>
+</code></pre></details>
 
   <h4>Secret — "base64는 암호화가 아니다"</h4>
   <p>
@@ -2880,6 +3083,16 @@ spec.containers[].env:
     <span class="tag">WATCH OUT</span>
     <code>kubectl get secret my-secret -o yaml</code>로 base64 값이 보인다고 놀라지 마세요 — 그게 정상입니다.
     실제 방어선은 RBAC(<code>secrets</code> 읽기 권한 제한)과 etcd 암호화입니다.
+  </div>
+
+  <div class="k8w" id="widget-qos">
+    <div class="k8w-title">Resource Calculator · QoS 클래스와 축출 우선순위</div>
+    <div class="k8w-sub">컨테이너 3개의 cpu/mem requests·limits를 입력하면 Pod의 QoS 클래스(Guaranteed/Burstable/BestEffort)와 메모리 압박 시 축출 순위, OOMScore 추정을 즉시 계산합니다.</div>
+    <div class="k8w-grid cols-3" data-conts></div>
+    <div class="k8w-actions">
+      <button class="k8w-go" type="button">▸ Calculate</button>
+    </div>
+    <div class="k8w-out"></div>
   </div>
 
   <h3 id="p3-c6"><span class="no">3.6</span>Volume·PV·PVC</h3>
@@ -2902,7 +3115,7 @@ spec.containers[].env:
     <strong>PVC(PersistentVolumeClaim)</strong>는 "나는 용량 100Gi, RWO, gp3 StorageClass가 필요하다"는 요청입니다.
     K8s는 PVC를 적절한 PV에 바인드합니다. 정적이면 미리 만든 PV 중 조건 맞는 것, 동적이면 StorageClass가 새 PV를 즉시 생성.
   </p>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · PersistentVolumeClaim.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: PersistentVolumeClaim
 metadata: { name: data }
 spec:
@@ -2919,7 +3132,7 @@ spec:
   volumes:
   - name: data
     persistentVolumeClaim: { claimName: data }
-</code></pre>
+</code></pre></details>
   <h4>AccessMode 4종</h4>
   <ul>
     <li><strong>RWO</strong> (ReadWriteOnce) — 한 노드에서만 쓰기. EBS 같은 블록 스토리지.</li>
@@ -2940,7 +3153,7 @@ spec:
     <dt>RoleBinding / ClusterRoleBinding</dt>
     <dd>Role을 Subject(User, Group, SA)에 바인드.</dd>
   </dl>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · ServiceAccount.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: ServiceAccount
 metadata: { name: deployer, namespace: prod }
 ---
@@ -2965,13 +3178,44 @@ roleRef:
   kind: Role
   name: deploy-manager
   apiGroup: rbac.authorization.k8s.io
-</code></pre>
+</code></pre></details>
   <h4>BoundServiceAccountToken (1.22+)</h4>
   <p>
     과거에는 모든 SA에 영구 토큰이 Secret으로 자동 생성됐습니다. 보안 취약 — 노출되면 무한정 유효했죠.
     현재는 Projected Token Volume으로 <strong>JWT</strong>가 주기적으로 로테이션됩니다. 토큰에는 Pod·네임스페이스·SA 정보가 담겨
     apiserver가 "이 토큰을 이 Pod가 사용 중인가"를 검증할 수 있습니다. 이 메커니즘이 EKS의 IRSA 작동의 기반입니다.
   </p>
+
+  <div class="k8w" id="widget-rbac">
+    <div class="k8w-title">RBAC Path Finder · 누가 뭘 할 수 있나 추적</div>
+    <div class="k8w-sub">Subject + Verb + Resource를 골라 RoleBinding/ClusterRoleBinding 체인을 추적해 allow/deny 결정을 단계별로 보여줍니다.</div>
+    <div class="k8w-grid cols-2">
+      <div class="k8w-card"><h6>Subject</h6>
+        <select data-subj></select>
+      </div>
+      <div class="k8w-card"><h6>Request</h6>
+        <label>Verb</label>
+        <select data-verb>
+          <option value="get">get</option><option value="list">list</option><option value="watch">watch</option>
+          <option value="create">create</option><option value="update">update</option><option value="patch">patch</option>
+          <option value="delete">delete</option>
+        </select>
+        <label>Resource</label>
+        <select data-res>
+          <option value="pods">pods</option><option value="deployments">deployments</option>
+          <option value="configmaps">configmaps</option><option value="secrets">secrets</option>
+          <option value="services">services</option><option value="endpoints">endpoints</option>
+          <option value="nodes/metrics">nodes/metrics</option><option value="*">*</option>
+        </select>
+        <label>Namespace</label>
+        <input type="text" value="default" data-ns>
+      </div>
+    </div>
+    <div class="k8w-actions">
+      <button class="k8w-go" type="button">▸ Trace</button>
+    </div>
+    <div class="k8w-out"></div>
+  </div>
 
   <h3 id="p3-c8"><span class="no">3.8</span>네임스페이스 거버넌스</h3>
   <p>
@@ -2984,7 +3228,7 @@ roleRef:
     <li><code>kube-node-lease</code> — 노드 하트비트(Lease) 저장</li>
   </ul>
   <h4>ResourceQuota</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · ResourceQuota.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: ResourceQuota
 metadata: { name: team-a, namespace: team-a }
 spec:
@@ -2996,7 +3240,7 @@ spec:
     persistentvolumeclaims: "10"
     services.loadbalancers: "2"   # 예산 통제
     count/pods: "100"
-</code></pre>
+</code></pre></details>
   <p>ResourceQuota가 설정된 네임스페이스에서 requests·limits를 쓰지 않은 Pod 생성은 즉시 거부됩니다.</p>
   <h4>LimitRange</h4>
   <p>
@@ -3154,6 +3398,73 @@ spec:
   </div>
 
   <h3 id="p4-c4"><span class="no">4.4</span>Service IP의 정체 · 패킷을 따라가기</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 18px;">
+    <svg viewBox="0 0 880 320" role="img" aria-label="CNI 패킷 흐름 다이어그램">
+      <defs>
+        <marker id="cniArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+
+      <!-- Node 1 box -->
+      <rect x="20" y="50" width="380" height="220" rx="10" class="svg-tint-fill svg-stroke-soft" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="40" y="76" class="svg-muted" font-size="11" font-weight="700" letter-spacing="3">NODE 1</text>
+
+      <!-- Pod A -->
+      <rect x="40" y="100" width="100" height="60" rx="6" class="svg-flag-fill" stroke="none"/>
+      <text x="90" y="128" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod A</text>
+      <text x="90" y="144" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="#0a0a0a">eth0 10.244.1.2</text>
+
+      <!-- veth bridge -->
+      <rect x="170" y="100" width="100" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="220" y="128" text-anchor="middle" class="svg-text" font-size="11" font-weight="700">veth</text>
+      <text x="220" y="144" text-anchor="middle" class="svg-muted" font-size="9">peer pair</text>
+
+      <!-- cni0 / iptables -->
+      <rect x="290" y="100" width="100" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="340" y="128" text-anchor="middle" class="svg-text" font-size="11" font-weight="700">cni0</text>
+      <text x="340" y="144" text-anchor="middle" class="svg-muted" font-size="9">+ iptables DNAT</text>
+
+      <!-- VXLAN tunnel -->
+      <rect x="170" y="195" width="200" height="40" rx="6" class="svg-accent-fill" stroke="none"/>
+      <text x="270" y="219" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="#fff">VXLAN UDP 8472</text>
+
+      <!-- Node 1 → tunnel arrow -->
+      <path d="M 140 130 L 170 130" class="svg-edge" marker-end="url(#cniArr)"/>
+      <path d="M 270 130 L 290 130" class="svg-edge" marker-end="url(#cniArr)"/>
+      <path d="M 340 160 L 340 195" class="svg-edge" marker-end="url(#cniArr)"/>
+
+      <!-- Node 2 box -->
+      <rect x="480" y="50" width="380" height="220" rx="10" class="svg-tint-fill svg-stroke-soft" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="500" y="76" class="svg-muted" font-size="11" font-weight="700" letter-spacing="3">NODE 2</text>
+
+      <!-- cni0 -->
+      <rect x="490" y="100" width="100" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="540" y="128" text-anchor="middle" class="svg-text" font-size="11" font-weight="700">cni0</text>
+      <text x="540" y="144" text-anchor="middle" class="svg-muted" font-size="9">decap VXLAN</text>
+
+      <!-- veth -->
+      <rect x="610" y="100" width="100" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="660" y="128" text-anchor="middle" class="svg-text" font-size="11" font-weight="700">veth</text>
+
+      <!-- Pod B -->
+      <rect x="740" y="100" width="100" height="60" rx="6" class="svg-flag-fill" stroke="none"/>
+      <text x="790" y="128" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="800" fill="#0a0a0a">Pod B</text>
+      <text x="790" y="144" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="#0a0a0a">eth0 10.244.2.7</text>
+
+      <!-- tunnel → Node 2 arrows -->
+      <path d="M 370 215 L 540 195" class="svg-edge" marker-end="url(#cniArr)"/>
+      <path d="M 540 160 L 540 130" class="svg-stroke" stroke-width="1.5" fill="none"/>
+      <path d="M 590 130 L 610 130" class="svg-edge" marker-end="url(#cniArr)"/>
+      <path d="M 710 130 L 740 130" class="svg-edge" marker-end="url(#cniArr)"/>
+
+      <!-- legend bottom -->
+      <text x="20" y="300" class="svg-text" font-size="11" font-weight="600">Pod A → veth → cni0 → VXLAN encap → 노드간 UDP 8472 → cni0(decap) → veth → Pod B</text>
+    </svg>
+    <div class="legend">MTU 1450 (1500 - 50 VXLAN overhead) · ClusterIP일 때 cni0의 iptables가 DNAT로 endpoint 선택</div>
+  </div>
+
   <p>
     같은 노드의 Pod A가 Service <code>svc</code>(ClusterIP 10.96.0.5:80)에 붙어있는 Pod B(10.244.1.2:8080)를 호출할 때,
     패킷이 어떤 경로로 가는지 단계별로 따라가 봅니다. iptables 모드 가정.
@@ -3198,6 +3509,29 @@ Pod A의 소켓은 10.96.0.5:80 응답으로 해석 → 성공</div>
     중요: <strong>Service IP는 네트워크 어디에도 실제로 존재하지 않습니다</strong>. 패킷의 목적지로만 나타나고, 즉시 Pod IP로 DNAT됩니다.
     그래서 Service IP에 ping을 쏠 수 없고(ping은 ICMP로 DNAT 대상이 아님), <code>ip addr</code>에도 없습니다.
   </p>
+
+  <h4>🏎️ Pit Lane Lab — CNI 패킷 흐름 5단계</h4>
+  <p>Pod-to-Pod overlay → ClusterIP DNAT → NodePort SNAT → NetworkPolicy drop → LB hop을 패킷이 따라가는 그대로 따라가 봅시다.</p>
+  <div class="klab" id="klab-network-setup" data-lab="network-setup">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · CNI PACKET FLOW · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. Pod ↔ Pod</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. ClusterIP DNAT</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. NodePort SNAT</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. NetPol drop</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. LB hop</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
 
   <h3 id="p4-c5"><span class="no">4.5</span>CoreDNS와 DNS의 함정들</h3>
   <p>
@@ -3312,6 +3646,18 @@ spec:
           path: "/api/v1/.*"
 </code></pre>
 
+  <div class="k8w" id="widget-netpol">
+    <div class="k8w-title">NetworkPolicy Visualizer · 9개 Pod 그리드</div>
+    <div class="k8w-sub">target/source 라벨 셀렉터와 포트를 입력하면 default-deny 가정 하에 어떤 연결이 허용/차단되는지 실시간으로 그려집니다.</div>
+    <div data-inputs style="margin-bottom: 12px;"></div>
+    <div class="k8w-actions">
+      <button class="k8w-go" type="button">▸ Apply</button>
+      <button class="k8w-go ghost" type="button" data-preset>Preset · db-only</button>
+    </div>
+    <div class="k8w-grid cols-3" data-grid style="margin-top:14px;"></div>
+    <div class="k8w-out"></div>
+  </div>
+
   <h3 id="p4-c7"><span class="no">4.7</span>LoadBalancer 구현과 externalTrafficPolicy</h3>
   <p>
     Service <code>type: LoadBalancer</code>는 클라우드에서만 "그냥 동작"합니다. 온프레미스에서는 <strong>MetalLB</strong>가 표준 솔루션입니다.
@@ -3424,6 +3770,63 @@ spec:
   </p>
 
   <h3 id="p5-c2"><span class="no">5.2</span>CSI 아키텍처 — 왜 이렇게 복잡한가</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 14px;">
+    <svg viewBox="0 0 760 460" role="img" aria-label="Storage 토폴로지 트리">
+      <defs>
+        <marker id="stArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+      <!-- Pod -->
+      <rect x="280" y="20" width="200" height="50" rx="6" class="svg-flag-fill" stroke="none"/>
+      <text x="380" y="42" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#0a0a0a">Pod</text>
+      <text x="380" y="58" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="#0a0a0a">volumes: [{ name, persistentVolumeClaim }]</text>
+
+      <path d="M 380 70 L 380 100" class="svg-edge" marker-end="url(#stArr)"/>
+
+      <!-- PVC -->
+      <rect x="270" y="105" width="220" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="380" y="128" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">PersistentVolumeClaim</text>
+      <text x="380" y="146" text-anchor="middle" class="svg-muted" font-size="10">storageClassName · accessModes · size</text>
+
+      <!-- bind dashed -->
+      <path d="M 270 132 L 110 200" class="svg-stroke" stroke-width="1.4" fill="none" stroke-dasharray="4 3"/>
+      <text x="170" y="180" class="svg-muted" font-size="10">binds (1:1)</text>
+
+      <!-- StorageClass dashed link -->
+      <path d="M 490 132 L 600 200" class="svg-stroke" stroke-width="1.4" fill="none" stroke-dasharray="4 3"/>
+      <text x="568" y="180" class="svg-muted" font-size="10">references</text>
+
+      <!-- PV (left) -->
+      <rect x="20" y="200" width="200" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="120" y="222" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">PersistentVolume</text>
+      <text x="120" y="240" text-anchor="middle" class="svg-muted" font-size="10">capacity · reclaimPolicy</text>
+
+      <!-- StorageClass (right) -->
+      <rect x="540" y="200" width="200" height="56" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="640" y="222" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">StorageClass</text>
+      <text x="640" y="240" text-anchor="middle" class="svg-muted" font-size="10">provisioner · parameters · binding</text>
+
+      <!-- both → CSI driver -->
+      <path d="M 120 256 L 380 320" class="svg-edge" marker-end="url(#stArr)"/>
+      <path d="M 640 256 L 380 320" class="svg-edge" marker-end="url(#stArr)"/>
+
+      <!-- CSI driver -->
+      <rect x="240" y="320" width="280" height="56" rx="6" class="svg-accent-fill" stroke="none"/>
+      <text x="380" y="343" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#fff">CSI Driver</text>
+      <text x="380" y="361" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="rgba(255,255,255,0.92)">controller · node · external-provisioner</text>
+
+      <!-- → backend -->
+      <path d="M 380 376 L 380 408" class="svg-edge" marker-end="url(#stArr)"/>
+
+      <!-- Backend volume -->
+      <rect x="240" y="410" width="280" height="40" rx="6" class="svg-tint-fill svg-stroke" stroke-width="1.6"/>
+      <text x="380" y="436" text-anchor="middle" class="svg-text" font-size="11" font-weight="600">EBS · NFS · Ceph RBD · iSCSI · CephFS · …</text>
+    </svg>
+    <div class="legend">Pod → PVC → PV (StorageClass가 동적 프로비저너 트리거) → CSI Driver → 실제 백엔드 볼륨. 점선은 selector/binding 관계.</div>
+  </div>
+
   <p>
     초기 K8s는 볼륨 드라이버를 "in-tree"로 코어 안에 품었습니다. 새 스토리지 지원을 추가하려면 K8s 릴리스 주기를 기다려야 했고,
     벤더들이 주도권을 갖기 어려웠습니다. <abbr data-term="CSI">CSI</abbr>(Container Storage Interface)는 이 문제를 풉니다 — 벤더가 자기 드라이버를 컨테이너로 패키징해 배포하면 끝.
@@ -4126,6 +4529,29 @@ reclaimPolicy: Delete</code></pre>
   </p>
 
   <h3 id="p8-c1"><span class="no">8.1</span>Pod 상태 이상 (7건)</h3>
+
+  <h4>🏎️ Pit Lane Lab — CrashLoopBackOff 디버그 한 사이클</h4>
+  <p>describe → logs --previous → events → exec sh debug → fix+apply 5단계로 가장 흔한 K8s 장애 시나리오를 손에 익혀 봅시다. 아래 모든 ts-case의 베이스 흐름이기도 합니다.</p>
+  <div class="klab" id="klab-crashloop" data-lab="crashloop">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · CRASHLOOP DEBUG · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. describe pod</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. logs --previous</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. events</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. exec sh debug</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. Fix + apply</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
 
   <div class="ts-case" data-correct="2">
     <div class="ts-head"><span class="ts-id">CASE 01</span><span class="ts-title">Pod이 Pending 상태에서 움직이지 않는다</span></div>
@@ -5142,6 +5568,31 @@ VPC 내 private 서브넷:
     <p class="summary">"kubectl apply를 치면 무슨 일이?"를 15단계로, Pod Running까지의 250ms 타임라인을 마이크로초 단위로, 그리고 Operator 패턴과 소스 코드까지 — 3년차의 지도를 그립니다.</p>
   </div>
   <h3 id="p9-c1"><span class="no">9.1</span>kubectl apply -f · 15단계 초정밀 해부</h3>
+
+  <h4>🏎️ Pit Lane Lab — kubectl apply 15단계 트레이스</h4>
+  <p>이 챕터의 15단계 흐름을 단일 시나리오 lab으로 압축했습니다. 각 탭은 한 위상(client → authn/z → mutating → validating → etcd → watch fanout)을 담당.</p>
+  <div class="klab" id="klab-kubectl-trace" data-lab="kubectl-trace">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · KUBECTL APPLY TRACE · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. Client validate</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. Authn/Authz</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. Mutating</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. Validating</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. etcd put</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t6">▸ 6. Watch fanout</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
+
   <p>
     지금까지 본 모든 것이 하나의 명령어 안에서 어떻게 맞물리는지, 15단계로 풀어 봅니다.
     이 흐름을 머릿속에 그릴 수 있으면 3년차 수준의 아키텍처 감각입니다.
@@ -5187,6 +5638,46 @@ VPC 내 private 서브넷:
   </div>
 
   <h3 id="p9-c3"><span class="no">9.3</span>Operator 패턴 · 쿠버네티스를 확장하는 방법</h3>
+
+  <div class="arch-container svg-frame" style="margin-top: 14px;">
+    <svg viewBox="0 0 600 380" role="img" aria-label="Reconcile loop 다이어그램">
+      <defs>
+        <marker id="rcArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent-fill"/>
+        </marker>
+      </defs>
+      <!-- Watch -->
+      <rect x="220" y="20" width="160" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="300" y="46" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">① Watch</text>
+      <text x="300" y="64" text-anchor="middle" class="svg-muted" font-size="10">apiserver event</text>
+
+      <path d="M 300 80 L 300 120" class="svg-edge" marker-end="url(#rcArr)"/>
+
+      <!-- Diff -->
+      <rect x="180" y="125" width="240" height="60" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="300" y="151" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">② Diff (desired vs actual)</text>
+      <text x="300" y="169" text-anchor="middle" class="svg-muted" font-size="10">Spec vs current Status</text>
+
+      <path d="M 300 185 L 300 225" class="svg-edge" marker-end="url(#rcArr)"/>
+
+      <!-- Reconcile -->
+      <rect x="220" y="230" width="160" height="60" rx="6" class="svg-accent-fill" stroke="none"/>
+      <text x="300" y="256" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="800" fill="#fff">③ Reconcile</text>
+      <text x="300" y="274" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="rgba(255,255,255,0.92)">action: create / update</text>
+
+      <path d="M 300 290 L 300 320" class="svg-edge" marker-end="url(#rcArr)"/>
+
+      <!-- Status -->
+      <rect x="220" y="320" width="160" height="50" rx="6" class="svg-card-fill svg-stroke" stroke-width="1.6"/>
+      <text x="300" y="350" text-anchor="middle" class="svg-text" font-size="13" font-weight="700">④ Status update</text>
+
+      <!-- Loop arrow back to Watch -->
+      <path d="M 380 345 Q 540 345 540 50 Q 540 30 480 30 L 380 30" class="svg-edge" stroke-dasharray="4 3" marker-end="url(#rcArr)"/>
+      <text x="500" y="200" class="svg-muted" font-size="10" font-weight="700" letter-spacing="2">RE-LOOP</text>
+    </svg>
+    <div class="legend">컨트롤러는 사건마다 reconcile() 한 번을 수행 · 결과가 idempotent여야 함 · Result.Requeue로 재시도 제어</div>
+  </div>
+
   <p>
     Kubernetes의 진짜 힘은 "리소스를 직접 정의할 수 있다"는 점입니다. 사용자가 <abbr data-term="CRD">CRD</abbr>(CustomResourceDefinition)를 등록하면
     apiserver가 그 리소스를 네이티브처럼 저장·Watch·Admission 대상으로 삼습니다. 그 리소스를 감시하며 실제 세상을 재조정하는 프로그램이 <strong>Operator</strong>입니다.
@@ -5235,6 +5726,29 @@ VPC 내 private 서브넷:
     <li><strong>ArgoCD</strong> — <code>Application</code> CR로 Git 레포의 manifest를 클러스터와 동기화.</li>
     <li><strong>External Secrets Operator</strong> — <code>ExternalSecret</code> CR로 AWS Secrets Manager 값을 Secret으로 동기.</li>
   </ul>
+
+  <h4>🏎️ Pit Lane Lab — Operator Reconcile Loop 5단계</h4>
+  <p>CRD apply → controller watch → reconcile diff → status update → finalizer cleanup. 위에서 본 Go 컨트롤러가 실제로 어떻게 etcd 이벤트에 반응하는지를 시나리오로 압축했습니다.</p>
+  <div class="klab" id="klab-operator" data-lab="operator">
+    <div class="klab-titlebar">
+      <span class="klab-glyph cir">○</span><span class="klab-glyph x">×</span><span class="klab-glyph tri">△</span><span class="klab-glyph sq">□</span>
+      <span class="klab-title">PIT LANE LAB · OPERATOR RECONCILE · BASH</span>
+    </div>
+    <div class="klab-tabs" role="tablist">
+      <button class="klab-tab" role="tab" aria-selected="true" data-tab="t1">▸ 1. CRD apply</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t2">▸ 2. Controller watch</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t3">▸ 3. Reconcile diff</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t4">▸ 4. Status update</button>
+      <button class="klab-tab" role="tab" aria-selected="false" data-tab="t5">▸ 5. Finalizer</button>
+    </div>
+    <div class="klab-body" aria-live="polite"></div>
+    <div class="klab-actions">
+      <button class="klab-btn" data-act="run">▸ Run</button>
+      <button class="klab-btn ghost" data-act="clear">Clear</button>
+      <button class="klab-btn ghost" data-act="speed">Speed ×1</button>
+      <span class="klab-status">tab 1 — idle · press Run</span>
+    </div>
+  </div>
 
   <h3 id="p9-c4"><span class="no">9.4</span>Kubernetes 소스 코드 투어</h3>
   <p>
@@ -5594,8 +6108,21 @@ kubectl get nodes -o json | jq -r '
 
   <h3 id="pA-c1"><span class="no">A.1</span>자주 쓰는 YAML 필드 빠른 참조</h3>
 
+  <p>이 부록의 YAML 매니페스트들은 모두 기본 닫힘 — Lab을 먼저 따라가서 흐름을 익힌 다음, 매니페스트는 참고용으로 펼쳐 보세요.</p>
+
+  <h4>🏎️ Pit Lane Lab Index — 7개 시나리오 빠른 점프</h4>
+  <div class="lab-index">
+    <a href="#klab-pod-lifecycle"><span class="lab-id">L1 · POD LIFECYCLE</span><span class="lab-name">Cgroup → unshare → pivot_root → exec → OOMKill</span></a>
+    <a href="#klab-scheduler"><span class="lab-id">L2 · SCHEDULER</span><span class="lab-name">Watch → Filter → Score → Bind → Preempt</span></a>
+    <a href="#klab-kubectl-trace"><span class="lab-id">L3 · KUBECTL TRACE</span><span class="lab-name">Client → Authn/z → Mutating → Validating → etcd</span></a>
+    <a href="#klab-deploy-rollout"><span class="lab-id">L4 · DEPLOY ROLLOUT</span><span class="lab-name">Apply → RS → Rolling → Readiness → Rollback</span></a>
+    <a href="#klab-crashloop"><span class="lab-id">L5 · CRASHLOOP</span><span class="lab-name">describe → logs prev → events → exec sh → fix</span></a>
+    <a href="#klab-network-setup"><span class="lab-id">L6 · NETWORK</span><span class="lab-name">Pod ↔ Pod → ClusterIP → NodePort → NetPol → LB</span></a>
+    <a href="#klab-operator"><span class="lab-id">L7 · OPERATOR</span><span class="lab-name">CRD → Watch → Reconcile diff → Status → Finalizer</span></a>
+  </div>
+
   <h4>Pod · 컨테이너 필드</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · Pod.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: Pod
 metadata:
   name: my-pod
@@ -5752,10 +6279,10 @@ spec:
         resourceFieldRef:
           containerName: app
           resource: limits.cpu
-</code></pre>
+</code></pre></details>
 
   <h4>Deployment · ReplicaSet · StatefulSet</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: apps/v1
+  <details class="manifest"><summary>VIEW MANIFEST · Deployment.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: apps/v1
 kind: Deployment
 metadata: { name: web }
 spec:
@@ -5800,10 +6327,10 @@ spec:
       accessModes: [ReadWriteOnce]
       resources: { requests: { storage: 50Gi } }
       storageClassName: gp3
-</code></pre>
+</code></pre></details>
 
   <h4>Service · Ingress · Gateway</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · Service.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: Service
 metadata: { name: api }
 spec:
@@ -5845,10 +6372,10 @@ kind: IngressClass
 metadata: { name: nginx }
 spec:
   controller: k8s.io/ingress-nginx
-</code></pre>
+</code></pre></details>
 
   <h4>PVC · StorageClass · VolumeSnapshot</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: storage.k8s.io/v1
+  <details class="manifest"><summary>VIEW MANIFEST · StorageClass.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata: { name: gp3 }
 provisioner: ebs.csi.aws.com
@@ -5882,10 +6409,10 @@ metadata: { name: csi-aws-ebs }
 driver: ebs.csi.aws.com
 deletionPolicy: Delete
 parameters: { tagSpecification_1: "Name=k8s-snapshot" }
-</code></pre>
+</code></pre></details>
 
   <h4>NetworkPolicy · ResourceQuota · LimitRange</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: networking.k8s.io/v1
+  <details class="manifest"><summary>VIEW MANIFEST · NetworkPolicy.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata: { name: default-deny }
 spec:
@@ -5931,10 +6458,10 @@ spec:
   - type: PersistentVolumeClaim
     max: { storage: 100Gi }
     min: { storage: 1Gi }
-</code></pre>
+</code></pre></details>
 
   <h4>HPA · PDB · PriorityClass</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: autoscaling/v2
+  <details class="manifest"><summary>VIEW MANIFEST · HorizontalPodAutoscaler.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata: { name: web }
 spec:
@@ -5982,10 +6509,10 @@ value: 1000000
 globalDefault: false
 description: "Critical user-facing services"
 preemptionPolicy: PreemptLowerPriority
-</code></pre>
+</code></pre></details>
 
   <h4>ServiceAccount · RBAC</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: v1
+  <details class="manifest"><summary>VIEW MANIFEST · ServiceAccount.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: deployer
@@ -6026,7 +6553,7 @@ roleRef:
   kind: Role
   name: deployer
   apiGroup: rbac.authorization.k8s.io
-</code></pre>
+</code></pre></details>
 
   <h3 id="pA-c2"><span class="no">A.2</span>자주 보는 안티패턴 25선</h3>
 
@@ -6338,7 +6865,7 @@ resource "helm_release" "karpenter" {
 
   <h4>레시피 2 · ArgoCD 기반 GitOps</h4>
   <p>ArgoCD 설치 후 애플리케이션 동기화 선언:</p>
-  <pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
+  <details class="manifest"><summary>VIEW MANIFEST · Application.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: shop
@@ -6377,7 +6904,7 @@ spec:
   clusterResourceWhitelist:       # 클러스터 범위 리소스 허용 목록
   - { group: "", kind: Namespace }
   namespaceResourceBlacklist:
-  - { group: "", kind: ResourceQuota }</code></pre>
+  - { group: "", kind: ResourceQuota }</code></pre></details>
   <p>
     GitOps의 철학은 <strong>"Git이 진실의 원천(single source of truth)"</strong>입니다.
     kubectl apply는 디버깅 때 외에는 하지 않고, 모든 변경은 PR → 머지 → ArgoCD가 sync.
@@ -6404,7 +6931,7 @@ spec:
 ├── crds/               # Helm이 우선 설치, 업그레이드는 건들지 않음
 └── README.md</code></pre>
   <p>핵심 템플릿 예시:</p>
-  <pre class="code"><code class="language-yaml"># templates/deployment.yaml
+  <details class="manifest"><summary>VIEW MANIFEST · Deployment.yaml</summary><pre class="code"><code class="language-yaml"># templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6428,7 +6955,7 @@ spec:
         resources: {{- toYaml .Values.resources | nindent 10 }}
         {{- with .Values.env }}
         env: {{- toYaml . | nindent 8 }}
-        {{- end }}</code></pre>
+        {{- end }}</code></pre></details>
   <p>
     주석 <code>checksum/config</code>는 Helm의 유명한 패턴 — ConfigMap 내용이 바뀌면 자동 hash가 달라져 Pod가 재생성됩니다.
   </p>
@@ -6480,7 +7007,7 @@ velero restore create --from-backup daily-20260415020000</code></pre></li>
     <dd>Istio/Linkerd의 multi-cluster로 서로 다른 클러스터의 서비스를 한 메쉬로 엮어 mTLS·트래픽 분산.</dd>
   </dl>
   <p>ApplicationSet 예:</p>
-  <pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
+  <details class="manifest"><summary>VIEW MANIFEST · ApplicationSet.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata: { name: shop-all-clusters, namespace: argocd }
 spec:
@@ -6498,11 +7025,11 @@ spec:
       destination:
         server: '{{server}}'
         namespace: shop
-      syncPolicy: { automated: { prune: true, selfHeal: true } }</code></pre>
+      syncPolicy: { automated: { prune: true, selfHeal: true } }</code></pre></details>
 
   <h4>레시피 6 · Canary 배포 with Argo Rollouts</h4>
   <p>Deployment를 <code>Rollout</code>으로 바꾸면 가중치 기반 점진 배포 가능:</p>
-  <pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
+  <details class="manifest"><summary>VIEW MANIFEST · Rollout.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata: { name: web }
 spec:
@@ -6532,14 +7059,14 @@ spec:
           - { name: service, value: web-canary }
       - setWeight: 50
       - pause: { duration: 10m }
-      - setWeight: 100</code></pre>
+      - setWeight: 100</code></pre></details>
   <p>
     <code>AnalysisTemplate</code>에 Prometheus 쿼리를 넣어 "5xx 비율이 0.1% 이하면 계속"으로 판단.
     자동 롤백까지 일직선으로 연결됩니다.
   </p>
 
   <h4>레시피 7 · Secret 관리 — External Secrets Operator</h4>
-  <pre class="code"><code class="language-yaml">apiVersion: external-secrets.io/v1beta1
+  <details class="manifest"><summary>VIEW MANIFEST · ClusterSecretStore.yaml</summary><pre class="code"><code class="language-yaml">apiVersion: external-secrets.io/v1beta1
 kind: ClusterSecretStore
 metadata: { name: aws-sm }
 spec:
@@ -6564,7 +7091,7 @@ spec:
   - secretKey: DB_PASSWORD
     remoteRef: { key: prod/app, property: db_password }
   - secretKey: API_KEY
-    remoteRef: { key: prod/app, property: api_key }</code></pre>
+    remoteRef: { key: prod/app, property: api_key }</code></pre></details>
   <p>
     AWS Secrets Manager에 있는 값을 1시간마다 동기 → K8s Secret으로 업데이트. Pod는 기존 Secret 참조 그대로.
     Secret 값이 바뀌면 Reloader 같은 도구가 Deployment를 자동 재시작.
@@ -7052,7 +7579,7 @@ curl -H "Authorization: Bearer $TOKEN" \
   </ol>
   <p><strong>왜 Pod가 재시작?</strong>: 노드가 <code>NotReady</code>로 떨어지자 <code>node.kubernetes.io/not-ready</code> taint가 추가되고, toleration이 없는 Pod가 evict. 복구 후 새 Pod가 다시 스케줄링.</p>
   <p><strong>완화</strong>: 모든 Pod에 다음 기본 toleration (K8s 기본값)</p>
-  <pre class="code"><code class="language-yaml">tolerations:
+  <details class="manifest"><summary>VIEW MANIFEST · tolerations:.yaml</summary><pre class="code"><code class="language-yaml">tolerations:
 - key: node.kubernetes.io/not-ready
   operator: Exists
   effect: NoExecute
@@ -7060,7 +7587,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - key: node.kubernetes.io/unreachable
   operator: Exists
   effect: NoExecute
-  tolerationSeconds: 300</code></pre>
+  tolerationSeconds: 300</code></pre></details>
   <p>기본 5분이지만, 짧은 네트워크 깜빡임에는 이 toleration을 <strong>600초 이상</strong>으로 늘리면 대량 이동을 피할 수 있습니다.</p>
 
   <h4>사고 D · "CSI 볼륨이 마운트되지 않는다"</h4>
@@ -8900,8 +9427,472 @@ curl -H "Authorization: Bearer $TOKEN" \
 <style id="ferrari-augment">
 /* ===========================================================
  * AUGMENT v2.1 · 가독성 + 인터랙션 보강
- * 본문 컨텐츠 0 변경 · CSS+JS로 동적 강화
+ * v3 추가: SVG palette tokens · klab terminal · widget chrome · manifest collapse
  * =========================================================== */
+
+/* ========== v3 SVG PALETTE TOKENS ========== */
+:root {
+  --svg-bg:          var(--carbon);
+  --svg-card:        #ffffff;
+  --svg-card-tint:   #f7f7f7;
+  --svg-stroke:      rgba(225,6,0,0.55);
+  --svg-stroke-soft: rgba(225,6,0,0.32);
+  --svg-text:        #0a0a0a;
+  --svg-text-muted:  rgba(10,10,10,0.62);
+  --svg-accent:      var(--rosso-bright);
+  --svg-flag:        var(--modena);
+  --svg-edge:        var(--rosso-bright);
+  --svg-grid:        rgba(0,0,0,0.06);
+  --svg-ok:          #2da66f;
+  --svg-warn:        #c08400;
+  --svg-danger:      var(--rosso-bright);
+}
+:root[data-theme="light"] {
+  --svg-card:        #ffffff;
+  --svg-card-tint:   #fafafa;
+  --svg-stroke:      rgba(225,6,0,0.55);
+  --svg-text:        #0a0a0a;
+  --svg-text-muted:  rgba(10,10,10,0.62);
+}
+/* SVG style classes (used inside <svg><style>) — provide via outer rules too */
+.svg-frame { background: var(--svg-card); border-radius: var(--r-md); }
+.svg-frame-tint { background: var(--svg-card-tint); }
+.svg-frame text.svg-text  { fill: var(--svg-text); font-family: var(--font-mono); }
+.svg-frame text.svg-muted { fill: var(--svg-text-muted); font-family: var(--font-mono); }
+.svg-frame .svg-card-fill  { fill: var(--svg-card); }
+.svg-frame .svg-tint-fill  { fill: var(--svg-card-tint); }
+.svg-frame .svg-accent-fill{ fill: var(--svg-accent); }
+.svg-frame .svg-flag-fill  { fill: var(--svg-flag); }
+.svg-frame .svg-stroke     { stroke: var(--svg-stroke); fill: none; }
+.svg-frame .svg-stroke-soft{ stroke: var(--svg-stroke-soft); fill: none; }
+.svg-frame .svg-edge       { stroke: var(--svg-edge); fill: none; stroke-width: 1.5; }
+.svg-frame .svg-edge-soft  { stroke: var(--svg-stroke-soft); fill: none; stroke-width: 1.2; stroke-dasharray: 4 3; }
+
+/* ========== v3 PIT LANE LAB (klab) TERMINAL ========== */
+.klab {
+  background: #050507;
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-md);
+  margin: 22px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow: hidden;
+  box-shadow: var(--shadow-rosso);
+  max-width: var(--content-w);
+  position: relative;
+}
+.klab-titlebar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, rgba(225,6,0,0.18), rgba(225,6,0,0.04));
+  border-bottom: 1px solid rgba(225,6,0,0.32);
+}
+.klab-glyph {
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.42); border-radius: 50%;
+  color: rgba(255,255,255,0.62);
+}
+.klab-glyph.tri { color: var(--modena); border-color: var(--modena); }
+.klab-glyph.cir { color: var(--rosso-bright); border-color: var(--rosso-bright); }
+.klab-glyph.x   { color: #5fb3ff; border-color: #5fb3ff; }
+.klab-glyph.sq  { color: #ff79e1; border-color: #ff79e1; }
+.klab-title {
+  margin-left: 8px; flex: 1;
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.klab-tabs {
+  display: flex; gap: 0;
+  background: #0a0a0c;
+  border-bottom: 1px solid rgba(225,6,0,0.18);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.klab-tabs::-webkit-scrollbar { display: none; }
+.klab-tab {
+  background: transparent;
+  color: rgba(255,255,255,0.55);
+  border: none;
+  padding: 11px 16px;
+  font-family: var(--font-sans);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 140ms, background 140ms, border-color 140ms;
+}
+.klab-tab[aria-selected="true"] {
+  color: var(--rosso-bright);
+  background: rgba(225,6,0,0.06);
+  border-bottom-color: var(--rosso-bright);
+}
+.klab-tab:hover { color: var(--rosso-bright); }
+.klab-body {
+  padding: 14px 16px;
+  min-height: 220px;
+  max-height: 420px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px; line-height: 1.65;
+  white-space: pre-wrap; word-break: break-word;
+  background: #050507;
+  color: #e0e0e0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(225,6,0,0.32) transparent;
+}
+.klab-body::-webkit-scrollbar { width: 5px; }
+.klab-body::-webkit-scrollbar-thumb { background: rgba(225,6,0,0.32); }
+.klab-body .prompt { color: var(--rosso-bright); }
+.klab-body .ok    { color: #b9f18d; }
+.klab-body .warn  { color: var(--modena); }
+.klab-body .err   { color: #ff7a7a; }
+.klab-body .dim   { color: #6f7079; font-style: italic; }
+.klab-body .hl    { color: var(--modena); font-weight: 700; }
+.klab-body .cmd   { color: var(--modena); }
+.klab-body div { word-break: keep-all; }
+.klab-body div.cmd { word-break: break-word; }
+.klab-actions {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: #0a0a0c;
+  border-top: 1px solid rgba(225,6,0,0.18);
+}
+.klab-btn {
+  background: var(--rosso-bright);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-full);
+  padding: 7px 16px;
+  font-family: var(--font-sans);
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 140ms, transform 80ms, box-shadow 200ms;
+}
+.klab-btn:hover { background: #ff1a14; box-shadow: 0 0 18px rgba(225,6,0,0.55); }
+.klab-btn:active { transform: scale(0.96); }
+.klab-btn.ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.62);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: none;
+}
+.klab-btn.ghost:hover {
+  color: var(--rosso-bright); border-color: var(--rosso-bright);
+  background: transparent;
+}
+.klab-status {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.42);
+  letter-spacing: 0.06em;
+}
+@media (max-width: 720px) {
+  .klab-tab { font-size: 10px; padding: 10px 11px; }
+  .klab-body { font-size: 11.5px; padding: 12px 14px; min-height: 180px; max-height: 360px; }
+  .klab-status { display: none; }
+}
+
+/* ========== v3 MANIFEST COLLAPSE ========== */
+details.manifest {
+  border: 1px solid rgba(225,6,0,0.22);
+  border-left: 3px solid var(--rosso-bright);
+  background: rgba(10,10,10,0.04);
+  border-radius: var(--r-md);
+  margin: 14px 0;
+  max-width: var(--content-w);
+}
+:root[data-theme="light"] details.manifest { background: rgba(225,6,0,0.02); }
+details.manifest > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 11px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rosso-bright);
+  display: flex; align-items: center; gap: 10px;
+}
+details.manifest > summary::-webkit-details-marker { display: none; }
+details.manifest > summary::before {
+  content: "▸";
+  display: inline-block;
+  transition: transform 180ms;
+}
+details.manifest[open] > summary::before { transform: rotate(90deg); }
+details.manifest > summary::after {
+  content: "VIEW";
+  margin-left: auto;
+  padding: 2px 9px;
+  font-size: 10px;
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-full);
+  color: var(--rosso-bright);
+}
+details.manifest[open] > summary::after { content: "HIDE"; color: var(--modena); border-color: var(--modena); }
+details.manifest > summary:hover { background: rgba(225,6,0,0.05); }
+details.manifest > pre, details.manifest > pre.code {
+  margin: 0 !important;
+  border-top: 1px solid rgba(225,6,0,0.22);
+  border-radius: 0 0 var(--r-md) var(--r-md) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+@media (max-width: 720px) {
+  details.manifest > pre, details.manifest > pre.code { font-size: 11px; }
+}
+
+/* ========== v3 WIDGET FRAME ========== */
+.k8w {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  margin: 22px 0;
+  max-width: var(--content-w);
+  position: relative;
+}
+.k8w::before {
+  content: "🏎️ INTERACTIVE WIDGET";
+  position: absolute;
+  top: -10px; left: 16px;
+  padding: 2px 10px;
+  background: var(--rosso-bright); color: #fff;
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.k8w-title {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 700;
+  color: var(--ink);
+  margin: 6px 0 4px;
+}
+.k8w-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 14px;
+}
+.k8w-grid { display: grid; gap: 12px; }
+.k8w-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.k8w-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.k8w-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+}
+.k8w-card.hot { border-color: var(--rosso-bright); box-shadow: 0 0 0 1px var(--rosso-bright) inset; }
+.k8w-card.dim { opacity: 0.5; }
+.k8w-card h6 {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rosso-bright);
+  margin-bottom: 6px;
+}
+.k8w label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+.k8w input[type="number"], .k8w input[type="text"], .k8w select {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: border-color 140ms;
+}
+.k8w input:focus, .k8w select:focus {
+  outline: none;
+  border-color: var(--rosso-bright);
+}
+.k8w input[type="range"] {
+  width: 100%;
+  accent-color: var(--rosso-bright);
+}
+.k8w-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.k8w-pill {
+  padding: 3px 9px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 140ms;
+}
+.k8w-pill[aria-pressed="true"], .k8w-pill.on {
+  background: var(--rosso-bright);
+  color: #fff;
+  border-color: var(--rosso-bright);
+}
+.k8w-pill:hover:not([aria-pressed="true"]) {
+  border-color: var(--rosso-bright);
+  color: var(--rosso-bright);
+}
+.k8w-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+.k8w-go {
+  background: var(--rosso-bright);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-full);
+  padding: 8px 18px;
+  font-family: var(--font-sans);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 140ms, transform 80ms;
+}
+.k8w-go:hover { background: #ff1a14; }
+.k8w-go:active { transform: scale(0.97); }
+.k8w-go.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.k8w-go.ghost:hover { color: var(--rosso-bright); border-color: var(--rosso-bright); }
+.k8w-out {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  min-height: 40px;
+}
+.k8w-out:empty::before {
+  content: "결과는 여기에 — 위에서 입력 후 ▸ Run";
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.k8w-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.k8w-bar .lbl { min-width: 90px; color: var(--ink-soft); }
+.k8w-bar .track {
+  flex: 1; height: 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  position: relative;
+}
+.k8w-bar .fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rosso-bright), var(--modena));
+  transition: width 360ms var(--ease);
+}
+.k8w-bar .val { min-width: 60px; text-align: right; color: var(--rosso-bright); font-weight: 700; }
+.k8w-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.10em;
+  margin-right: 4px;
+}
+.k8w-tag.ok { background: var(--ok-soft); color: var(--ok); }
+.k8w-tag.warn { background: var(--warn-soft); color: var(--modena-dark); }
+:root[data-theme="dark"] .k8w-tag.warn { color: var(--modena); }
+.k8w-tag.bad { background: var(--danger-soft); color: var(--danger); }
+.k8w-tag.info { background: var(--info-soft); color: var(--info); }
+
+/* ========== v3 LAB INDEX (in PA) ========== */
+.lab-index {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(225,6,0,0.06), rgba(255,242,0,0.02));
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.lab-index a {
+  display: block;
+  padding: 12px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rosso-bright);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  border-bottom: none;
+  transition: transform 140ms, border-color 140ms;
+}
+.lab-index a:hover { transform: translateY(-1px); border-color: var(--rosso-bright); }
+.lab-index a .lab-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--rosso-bright);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.lab-index a .lab-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--ink);
+  margin-top: 4px;
+  display: block;
+}
+
+/* ========== v3 OPEN-LAB BUTTON ========== */
+.open-lab {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 6px 0 0;
+  padding: 4px 12px;
+  background: rgba(225,6,0,0.10);
+  border: 1px solid var(--rosso-bright);
+  border-radius: var(--r-full);
+  color: var(--rosso-bright);
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: none;
+  transition: background 140ms;
+}
+.open-lab::before { content: "▶"; font-size: 9px; }
+.open-lab:hover { background: var(--rosso-bright); color: #fff; border-bottom: none; }
+
+/* ========== v3 SVG container — light card forced (existing rule kept for compat) ========== */
 
 /* SVG 컨테이너는 항상 라이트 카드(원본 SVG가 라이트 색상 하드코딩) */
 .arch-container {
@@ -9676,6 +10667,869 @@ header.page::after {
 
   document.documentElement.classList.add("augmented-v21");
 })();
-</script>
+
+/* =======================================================================
+ * v3 PIT LANE LAB · K8sLab engine + 7 lab scenarios
+ * ======================================================================= */
+(function () {
+  "use strict";
+
+  /* SCRIPTS — line objects { c: text, t: cmd|ok|warn|err|dim|hl|plain } */
+  var SCRIPTS = {
+    "pod-lifecycle": {
+      label: "POD BIRTH FROM CS · UNSHARE · CGROUP · PIVOT_ROOT",
+      tabs: [
+        { id: "t1", title: "Cgroup create", lines: [
+          { c: "$ # 새 Pod의 cgroup v2 슬라이스 생성 (kubelet이 함)", t: "dim" },
+          { c: "$ mkdir /sys/fs/cgroup/kubepods.slice/podabc.slice", t: "cmd" },
+          { c: "$ echo '+cpu +memory +pids +io' > /sys/fs/cgroup/kubepods.slice/podabc.slice/cgroup.subtree_control", t: "cmd" },
+          { c: "$ echo 200000 > .../cpu.max     # 0.2 core (200ms / 1s period)", t: "cmd" },
+          { c: "$ echo 268435456 > .../memory.max  # 256MiB hard limit", t: "cmd" },
+          { c: "ok · 슬라이스 + 컨트롤러 활성. memory.high는 미설정(soft 없음)", t: "ok" },
+          { c: "$ # 컨테이너 프로세스가 이 cgroup에 들어가면 limit 적용", t: "dim" }
+        ]},
+        { id: "t2", title: "Unshare ns", lines: [
+          { c: "$ # 새 mount/uts/ipc/pid/net 네임스페이스 + bash 띄우기", t: "dim" },
+          { c: "$ unshare --mount --uts --ipc --pid --fork --net /bin/bash", t: "cmd" },
+          { c: "# hostname container-1                # uts 격리", t: "cmd" },
+          { c: "# ip link add veth0 type veth peer name vethpeer  # net ns 안", t: "cmd" },
+          { c: "# echo $$  ;  # 새 pid 1 (--fork 효과)", t: "cmd" },
+          { c: "1", t: "ok" },
+          { c: "# ls /proc/1/ns/   # 자기 ns inode 확인", t: "cmd" },
+          { c: "ipc → 4026532241 · mnt → 4026532240 · net → 4026532244 · pid → 4026532245", t: "ok" },
+          { c: "$ # 호스트 ns ↔ 컨테이너 ns 분리 완료", t: "hl" }
+        ]},
+        { id: "t3", title: "pivot_root", lines: [
+          { c: "$ # 컨테이너 rootfs로 pivot — overlayfs lower+upper 마운트가 끝난 뒤", t: "dim" },
+          { c: "# mount --bind /var/lib/containers/abc/merged /mnt", t: "cmd" },
+          { c: "# cd /mnt && mkdir oldroot", t: "cmd" },
+          { c: "# pivot_root . oldroot", t: "cmd" },
+          { c: "# umount -l /oldroot && rmdir /oldroot", t: "cmd" },
+          { c: "ok · 컨테이너는 이제 /var/lib/.../merged를 / 로 본다", t: "ok" },
+          { c: "$ # chroot와 다른 점: pivot_root는 mount ns 내 rootfs를 통째로 swap", t: "dim" }
+        ]},
+        { id: "t4", title: "exec entrypoint", lines: [
+          { c: "$ # OCI runtime(runc)이 config.json 의 process.args 실행", t: "dim" },
+          { c: "$ runc exec abc /usr/local/bin/nginx -g 'daemon off;'", t: "cmd" },
+          { c: "[2026-05-05 02:14:01] starting nginx 1.25.3", t: "ok" },
+          { c: "[2026-05-05 02:14:01] using inherited sockets from \"6;\"", t: "ok" },
+          { c: "$ kubectl get pod nginx-x -o jsonpath='{.status.phase}'", t: "cmd" },
+          { c: "Running", t: "hl" }
+        ]},
+        { id: "t5", title: "OOMKill replay", lines: [
+          { c: "$ # 컨테이너가 memory.max 초과 → OOM killer가 cgroup 안 프로세스 처치", t: "dim" },
+          { c: "$ kubectl exec -it nginx-x -- bash -c 'tail /dev/zero > /tmp/big'", t: "cmd" },
+          { c: "command terminated with exit code 137", t: "err" },
+          { c: "$ kubectl describe pod nginx-x | grep -A2 'Last State'", t: "cmd" },
+          { c: "Last State:     Terminated", t: "warn" },
+          { c: "  Reason:       OOMKilled", t: "warn" },
+          { c: "  Exit Code:    137", t: "warn" },
+          { c: "$ # exit 137 = 128 + 9 (SIGKILL). RestartPolicy=Always → kubelet이 재시작", t: "dim" },
+          { c: "$ kubectl get pod nginx-x  # 1m 후", t: "cmd" },
+          { c: "NAME       READY   STATUS    RESTARTS   AGE", t: "ok" },
+          { c: "nginx-x    1/1     Running   1 (38s ago)  4m", t: "ok" }
+        ]}
+      ]
+    },
+    "scheduler": {
+      label: "SCHEDULER DECISION · FILTER · SCORE · BIND",
+      tabs: [
+        { id: "t1", title: "Watch unscheduled", lines: [
+          { c: "$ # scheduler는 spec.nodeName이 비어있는 Pod를 etcd watch", t: "dim" },
+          { c: "$ kubectl get pods --field-selector=spec.nodeName=", t: "cmd" },
+          { c: "NAME                READY   STATUS    NODE     AGE", t: "ok" },
+          { c: "nginx-7d9f-xqz92    0/1     Pending   <none>   3s", t: "warn" },
+          { c: "$ # SchedulingQueue에 enqueue됨 → priority queue 순회", t: "dim" }
+        ]},
+        { id: "t2", title: "Filter (predicate)", lines: [
+          { c: "$ # Filter 단계 — 통과 못하는 노드는 즉시 탈락", t: "dim" },
+          { c: "node-1   ✓ NodeName       ✓ Taint        ✗ Resources(cpu 4 > free 2)", t: "err" },
+          { c: "node-2   ✓ NodeName       ✓ Taint        ✓ Resources       ✓ NodeAffinity", t: "ok" },
+          { c: "node-3   ✓ NodeName       ✗ Taint(NoSchedule, no toleration)", t: "err" },
+          { c: "$ # 살아남은 후보: node-2 한 개", t: "hl" },
+          { c: "$ # filter 플러그인 12개+ 직렬 호출 — 어느 하나라도 fail이면 즉시 reject", t: "dim" }
+        ]},
+        { id: "t3", title: "Score (priority)", lines: [
+          { c: "$ # 후보 노드 ≥2 개일 때 Score 단계", t: "dim" },
+          { c: "$ # 플러그인이 0~100 점수 부여, 합산 후 max 노드 선택", t: "dim" },
+          { c: "node-2:  LeastAllocated 78  +  BalancedAllocation 88  +  ImageLocality 100  =  266", t: "ok" },
+          { c: "node-4:  LeastAllocated 92  +  BalancedAllocation 64  +  ImageLocality   0  =  156", t: "warn" },
+          { c: "node-5:  LeastAllocated 45  +  BalancedAllocation 50  +  ImageLocality 100  =  195", t: "warn" },
+          { c: "$ # 승자 → node-2 (점수 합 266)", t: "hl" }
+        ]},
+        { id: "t4", title: "Bind", lines: [
+          { c: "$ # scheduler가 apiserver에 Binding 객체 PUT", t: "dim" },
+          { c: "$ # POST /api/v1/namespaces/default/pods/nginx/binding", t: "cmd" },
+          { c: "{ \"target\": { \"kind\": \"Node\", \"name\": \"node-2\" } }", t: "cmd" },
+          { c: "ok · spec.nodeName=node-2 패치됨, status.phase=Pending 유지", t: "ok" },
+          { c: "$ # node-2의 kubelet이 watch event 받고 컨테이너 생성 시작", t: "dim" },
+          { c: "$ kubectl get pod nginx -o wide", t: "cmd" },
+          { c: "NAME    READY  STATUS              NODE", t: "ok" },
+          { c: "nginx   0/1    ContainerCreating   node-2", t: "hl" }
+        ]},
+        { id: "t5", title: "Preemption", lines: [
+          { c: "$ # 더 높은 PriorityClass의 Pod가 들어왔지만 모든 노드 가득", t: "dim" },
+          { c: "$ kubectl describe pod high-pri | grep -A3 Events", t: "cmd" },
+          { c: "FailedScheduling: 0/5 nodes are available: insufficient cpu", t: "warn" },
+          { c: "preempt: node-2에서 victim=low-pri-1,low-pri-2 (priority 100 < 1000)", t: "warn" },
+          { c: "preempt: graceful eviction issued (terminationGracePeriodSeconds=30)", t: "ok" },
+          { c: "schedule: high-pri → node-2 (after victims terminate)", t: "hl" }
+        ]}
+      ]
+    },
+    "kubectl-trace": {
+      label: "KUBECTL APPLY · 15 STEP TRACE",
+      tabs: [
+        { id: "t1", title: "Client validate", lines: [
+          { c: "$ kubectl apply -f deployment.yaml", t: "cmd" },
+          { c: "[client] kubeconfig 파싱 → cluster URL · CA · client cert 확인", t: "ok" },
+          { c: "[client] OpenAPI schema (cached at ~/.kube/cache) 로 정합성 검사", t: "ok" },
+          { c: "[client] kind=Deployment, apiVersion=apps/v1 → 매핑 OK", t: "ok" },
+          { c: "[client] last-applied-configuration annotation 계산 (3-way merge)", t: "ok" }
+        ]},
+        { id: "t2", title: "Authn / Authz", lines: [
+          { c: "[apiserver] TLS handshake · client cert subject=devuser O=ops", t: "ok" },
+          { c: "[apiserver] authentication chain: certificate → bearer-token → webhook", t: "dim" },
+          { c: "[apiserver] authenticated user=devuser groups=[ops, system:authenticated]", t: "ok" },
+          { c: "[apiserver] authorization (RBAC) → ClusterRole=deploy-admin allow", t: "ok" },
+          { c: "[apiserver] decision: allow (verb=create, resource=deployments, namespace=default)", t: "hl" }
+        ]},
+        { id: "t3", title: "Mutating admission", lines: [
+          { c: "[apiserver] mutating webhook chain (5개)", t: "dim" },
+          { c: "  → istio-sidecar-injector  +sidecar.istio.io/status: \"...\"", t: "ok" },
+          { c: "  → vault-secret-injector   +vault.hashicorp.com/agent-inject", t: "ok" },
+          { c: "  → defaulting              +podSpec.terminationGracePeriodSeconds=30", t: "ok" },
+          { c: "[apiserver] mutated object 다음 단계로 전달", t: "hl" }
+        ]},
+        { id: "t4", title: "Validating admission", lines: [
+          { c: "[apiserver] schema validation: OpenAPI v3 + structural", t: "ok" },
+          { c: "[apiserver] validating webhooks (3개)", t: "dim" },
+          { c: "  → opa-gatekeeper          policy: required-labels OK", t: "ok" },
+          { c: "  → kyverno                 policy: disallow-latest-tag → image=nginx:1.25 OK", t: "ok" },
+          { c: "  → resource-quota          requests.cpu OK (총 4 < quota 16)", t: "ok" },
+          { c: "[apiserver] all webhooks approved", t: "hl" }
+        ]},
+        { id: "t5", title: "etcd put", lines: [
+          { c: "[apiserver] etcd PUT /registry/deployments/default/nginx", t: "cmd" },
+          { c: "[etcd] Raft propose → leader → AppendEntries to followers", t: "dim" },
+          { c: "[etcd] quorum (2/3) ack → commit · revision=8842", t: "ok" },
+          { c: "[apiserver] response 201 Created", t: "ok" },
+          { c: "deployment.apps/nginx created", t: "hl" }
+        ]},
+        { id: "t6", title: "Watch fanout", lines: [
+          { c: "[apiserver] watch fanout · revision=8842", t: "dim" },
+          { c: "  → kube-controller-manager (deployment-controller)", t: "ok" },
+          { c: "    → ReplicaSet 생성 ➜ revision=8843", t: "ok" },
+          { c: "  → kube-scheduler (podscheduling event)", t: "ok" },
+          { c: "    → 3 Pod 스케줄링 ➜ revision=8844-8846", t: "ok" },
+          { c: "  → kubelet on node-2 (watch by hostname)", t: "ok" },
+          { c: "    → 컨테이너 시작 → status update ➜ revision=8847", t: "hl" },
+          { c: "$ # 단일 apply 한번이 6+ 컴포넌트의 reconcile 카스케이드 트리거", t: "dim" }
+        ]}
+      ]
+    },
+    "deploy-rollout": {
+      label: "DEPLOYMENT ROLLOUT · ROLLING UPDATE",
+      tabs: [
+        { id: "t1", title: "Apply Deployment", lines: [
+          { c: "$ kubectl apply -f deploy.yaml", t: "cmd" },
+          { c: "deployment.apps/api created", t: "ok" },
+          { c: "$ kubectl get deploy api", t: "cmd" },
+          { c: "NAME   READY   UP-TO-DATE   AVAILABLE   AGE", t: "ok" },
+          { c: "api    0/4     4            0           3s", t: "warn" },
+          { c: "$ # spec.replicas=4, strategy=RollingUpdate(maxSurge=1, maxUnavail=1)", t: "dim" }
+        ]},
+        { id: "t2", title: "RS create", lines: [
+          { c: "$ # deployment-controller가 ReplicaSet 생성, pod-template-hash=7f9c", t: "dim" },
+          { c: "$ kubectl get rs", t: "cmd" },
+          { c: "NAME            DESIRED   CURRENT   READY", t: "ok" },
+          { c: "api-7f9c        4         4         0", t: "warn" },
+          { c: "$ kubectl get pods -l app=api", t: "cmd" },
+          { c: "api-7f9c-aa  0/1  ContainerCreating", t: "warn" },
+          { c: "api-7f9c-bb  0/1  ContainerCreating", t: "warn" },
+          { c: "api-7f9c-cc  0/1  ContainerCreating", t: "warn" },
+          { c: "api-7f9c-dd  0/1  ContainerCreating", t: "warn" }
+        ]},
+        { id: "t3", title: "Rolling 25/25", lines: [
+          { c: "$ # 새 이미지로 update, 기존 4개 → 새 4개 점진 교체", t: "dim" },
+          { c: "$ kubectl set image deploy/api api=api:v2", t: "cmd" },
+          { c: "$ kubectl rollout status deploy/api --watch", t: "cmd" },
+          { c: "Waiting for deployment \"api\" rollout to finish: 1 old replicas pending termination", t: "warn" },
+          { c: "Waiting for deployment \"api\" rollout to finish: 2 of 4 updated replicas are available", t: "warn" },
+          { c: "Waiting for deployment \"api\" rollout to finish: 3 of 4 updated replicas are available", t: "warn" },
+          { c: "deployment \"api\" successfully rolled out", t: "ok" },
+          { c: "$ # maxSurge=1: 동시에 최대 5개까지(4+1), maxUnavail=1: 최소 3개 available", t: "dim" },
+          { c: "$ kubectl get rs -l app=api", t: "cmd" },
+          { c: "api-7f9c   0   0   0   2m  # 옛 RS 0으로 스케일다운", t: "ok" },
+          { c: "api-9d12   4   4   4   1m  # 새 RS 4개 ready", t: "hl" }
+        ]},
+        { id: "t4", title: "Readiness gate", lines: [
+          { c: "$ # readinessProbe 실패 → endpoint에서 즉시 제외", t: "dim" },
+          { c: "$ # 새 v2 컨테이너 시작했지만 readinessProbe HTTP /health 503 응답", t: "dim" },
+          { c: "api-9d12-xx  0/1  Running  0  18s   <not ready>", t: "warn" },
+          { c: "$ kubectl get endpointslice -l kubernetes.io/service-name=api", t: "cmd" },
+          { c: "endpoints: 3 ready (api-7f9c-bb,cc,dd) + 1 notReady (api-9d12-xx)", t: "warn" },
+          { c: "$ # rolling update가 readiness 대기 → SLA 보호", t: "dim" },
+          { c: "$ # 30s 후 /health 200 → ready=true → endpointslice에 추가", t: "ok" }
+        ]},
+        { id: "t5", title: "Rollback", lines: [
+          { c: "$ # v2가 에러 5xx → 롤백", t: "dim" },
+          { c: "$ kubectl rollout undo deploy/api", t: "cmd" },
+          { c: "deployment.apps/api rolled back", t: "ok" },
+          { c: "$ kubectl rollout history deploy/api", t: "cmd" },
+          { c: "REVISION  CHANGE-CAUSE", t: "ok" },
+          { c: "1         set image api=api:v1", t: "ok" },
+          { c: "2         set image api=api:v2", t: "ok" },
+          { c: "3         rollback to revision 1  ← 현재", t: "hl" },
+          { c: "$ # rollback도 또 다른 RollingUpdate (revision=4 RS 생성)", t: "dim" }
+        ]}
+      ]
+    },
+    "crashloop": {
+      label: "CRASHLOOPBACKOFF · DIAGNOSE & FIX",
+      tabs: [
+        { id: "t1", title: "describe pod", lines: [
+          { c: "$ kubectl get pod -l app=worker", t: "cmd" },
+          { c: "NAME              READY  STATUS             RESTARTS  AGE", t: "ok" },
+          { c: "worker-0          0/1    CrashLoopBackOff   8         18m", t: "err" },
+          { c: "$ kubectl describe pod worker-0 | tail -20", t: "cmd" },
+          { c: "Last State:     Terminated", t: "warn" },
+          { c: "  Reason:       Error", t: "warn" },
+          { c: "  Exit Code:    1", t: "warn" },
+          { c: "  Started:      18:21:03", t: "warn" },
+          { c: "  Finished:     18:21:04", t: "warn" },
+          { c: "Events:", t: "ok" },
+          { c: "  Warning  BackOff  18s  kubelet  Back-off restarting failed container", t: "err" }
+        ]},
+        { id: "t2", title: "logs --previous", lines: [
+          { c: "$ # 현재 컨테이너는 BackOff 대기 중 → --previous 로 직전 인스턴스 로그", t: "dim" },
+          { c: "$ kubectl logs worker-0 --previous", t: "cmd" },
+          { c: "2026-05-05T18:21:03 INFO  starting worker v3.2", t: "ok" },
+          { c: "2026-05-05T18:21:03 INFO  reading config from /etc/worker/config.yaml", t: "ok" },
+          { c: "2026-05-05T18:21:04 ERROR failed to load config: open /etc/worker/config.yaml: no such file or directory", t: "err" },
+          { c: "2026-05-05T18:21:04 PANIC unrecoverable: missing config", t: "err" }
+        ]},
+        { id: "t3", title: "events", lines: [
+          { c: "$ kubectl get events --field-selector involvedObject.name=worker-0", t: "cmd" },
+          { c: "LAST   TYPE      REASON     OBJECT     MESSAGE", t: "ok" },
+          { c: "20m    Normal    Scheduled  worker-0   bound to node-2", t: "ok" },
+          { c: "20m    Normal    Pulling    worker-0   pulling image worker:v3.2", t: "ok" },
+          { c: "20m    Normal    Created    worker-0   container created", t: "ok" },
+          { c: "20m    Normal    Started    worker-0   container started", t: "ok" },
+          { c: "20m    Warning   BackOff    worker-0   Back-off restarting failed container", t: "warn" },
+          { c: "$ # ConfigMap 마운트 누락 의심 → describe로 volumes 확인", t: "dim" }
+        ]},
+        { id: "t4", title: "exec sh debug", lines: [
+          { c: "$ # 같은 노드에 디버그 컨테이너 띄우기 (ephemeral)", t: "dim" },
+          { c: "$ kubectl debug -it worker-0 --image=busybox --target=worker", t: "cmd" },
+          { c: "Defaulting debug container name to debugger-xkz", t: "ok" },
+          { c: "/ # ls /etc/worker/", t: "cmd" },
+          { c: "ls: /etc/worker/: No such file or directory", t: "err" },
+          { c: "/ # # → 마운트 자체가 없다 → spec의 volumeMounts 누락이 원인", t: "dim" },
+          { c: "$ kubectl get deploy worker -o yaml | grep -A5 volumeMounts", t: "cmd" },
+          { c: "        volumeMounts:", t: "ok" },
+          { c: "        - name: data", t: "ok" },
+          { c: "          mountPath: /var/lib/worker", t: "warn" },
+          { c: "        # /etc/worker mount missing! ConfigMap 누락", t: "err" }
+        ]},
+        { id: "t5", title: "Fix + apply", lines: [
+          { c: "$ # ConfigMap volume + mount 추가 후 apply", t: "dim" },
+          { c: "$ kubectl apply -f worker-fixed.yaml", t: "cmd" },
+          { c: "deployment.apps/worker configured", t: "ok" },
+          { c: "$ kubectl rollout status deploy/worker", t: "cmd" },
+          { c: "Waiting for deployment \"worker\" rollout to finish: 0 of 1 updated replicas are available...", t: "warn" },
+          { c: "deployment \"worker\" successfully rolled out", t: "ok" },
+          { c: "$ kubectl get pod -l app=worker", t: "cmd" },
+          { c: "NAME             READY  STATUS    RESTARTS  AGE", t: "ok" },
+          { c: "worker-7c4-aa    1/1    Running   0         32s", t: "hl" }
+        ]}
+      ]
+    },
+    "network-setup": {
+      label: "CNI PACKET FLOW · POD ↔ POD ↔ SVC",
+      tabs: [
+        { id: "t1", title: "Pod-to-Pod (overlay)", lines: [
+          { c: "$ # podA(10.244.1.2 on node-1) → podB(10.244.2.7 on node-2) ping", t: "dim" },
+          { c: "$ kubectl exec podA -- ping -c1 10.244.2.7", t: "cmd" },
+          { c: "PING 10.244.2.7: 64 bytes from 10.244.2.7: icmp_seq=1 time=0.42 ms", t: "ok" },
+          { c: "$ # 흐름:", t: "dim" },
+          { c: "podA eth0 → veth(@host) cni0 → vxlan tunnel(UDP 8472) → node-2 → cni0 → veth → podB eth0", t: "ok" },
+          { c: "$ # MTU = 1450 (1500 - 50 vxlan overhead)", t: "dim" }
+        ]},
+        { id: "t2", title: "ClusterIP DNAT", lines: [
+          { c: "$ kubectl get svc api", t: "cmd" },
+          { c: "NAME  TYPE       CLUSTER-IP    PORT", t: "ok" },
+          { c: "api   ClusterIP  10.96.5.42    80", t: "ok" },
+          { c: "$ # 클라이언트가 10.96.5.42:80 으로 connect → kube-proxy iptables가 DNAT", t: "dim" },
+          { c: "$ iptables -t nat -L KUBE-SVC-XYZ -n", t: "cmd" },
+          { c: "Chain KUBE-SVC-XYZ (1 references)", t: "ok" },
+          { c: "  KUBE-SEP-A  prob 0.33  → 10.244.1.2:8080", t: "ok" },
+          { c: "  KUBE-SEP-B  prob 0.50  → 10.244.2.7:8080", t: "ok" },
+          { c: "  KUBE-SEP-C  default    → 10.244.3.5:8080", t: "ok" },
+          { c: "$ # 무가중 random load balance, conntrack에 mapping 캐시", t: "hl" }
+        ]},
+        { id: "t3", title: "NodePort SNAT", lines: [
+          { c: "$ kubectl get svc api -o yaml | grep -E 'nodePort|type'", t: "cmd" },
+          { c: "  type: NodePort", t: "ok" },
+          { c: "  nodePort: 30080", t: "ok" },
+          { c: "$ # 외부 → node-1:30080 → DNAT → endpoint 선택 → SNAT(node IP)", t: "dim" },
+          { c: "$ # SNAT가 없으면 응답이 외부로 직접 갈 때 source 불일치 → 패킷 drop", t: "warn" },
+          { c: "$ # externalTrafficPolicy=Local 이면 SNAT 안 함 + 같은 노드의 endpoint만 사용", t: "ok" }
+        ]},
+        { id: "t4", title: "NetworkPolicy drop", lines: [
+          { c: "$ # default-deny ingress NP 적용된 ns에서 podA → podB 시도", t: "dim" },
+          { c: "$ kubectl exec podA -- nc -zv podB 8080 -w 2", t: "cmd" },
+          { c: "nc: connect to podB port 8080 (tcp) timed out: Operation now in progress", t: "err" },
+          { c: "$ # CNI(calico/cilium) eBPF가 packet drop", t: "dim" },
+          { c: "$ # NP 추가: from podSelector matchLabels app=podA → ingress allow 80", t: "ok" },
+          { c: "$ kubectl exec podA -- nc -zv podB 8080 -w 2", t: "cmd" },
+          { c: "podB (10.244.2.7) 8080 open", t: "hl" }
+        ]},
+        { id: "t5", title: "LB → NodePort hop", lines: [
+          { c: "$ # type=LoadBalancer → cloud LB → 모든 노드의 NodePort", t: "dim" },
+          { c: "User → AWS NLB → node-1:30080 (or node-2 ...) → ClusterIP DNAT → endpoint", t: "ok" },
+          { c: "$ # NLB는 health check로 node 단위 fail 감지 (NodePort에 health endpoint)", t: "dim" },
+          { c: "$ # externalTrafficPolicy=Local → 그 노드에 endpoint 있을 때만 라우팅", t: "ok" },
+          { c: "$ # → source IP preservation + extra hop 절감", t: "hl" }
+        ]}
+      ]
+    },
+    "operator": {
+      label: "OPERATOR RECONCILE LOOP · CRD WATCH",
+      tabs: [
+        { id: "t1", title: "CRD apply", lines: [
+          { c: "$ kubectl apply -f cert-issuer-crd.yaml", t: "cmd" },
+          { c: "customresourcedefinition.apiextensions.k8s.io/certissuers.example.io created", t: "ok" },
+          { c: "$ kubectl apply -f issuer-instance.yaml", t: "cmd" },
+          { c: "certissuer.example.io/letsencrypt-prod created", t: "ok" },
+          { c: "$ # CR(Custom Resource)는 etcd에 저장 — 아직 효과 없음", t: "dim" }
+        ]},
+        { id: "t2", title: "Controller watch", lines: [
+          { c: "[operator] controller-runtime: starting manager", t: "ok" },
+          { c: "[operator] reflector: starting watch on certissuers.example.io v1", t: "ok" },
+          { c: "[operator] informer cache populated · 1 CertIssuer in queue", t: "hl" },
+          { c: "[operator] reconciler.Reconcile(default/letsencrypt-prod)", t: "dim" }
+        ]},
+        { id: "t3", title: "Reconcile diff", lines: [
+          { c: "[reconcile] desired: ACME secret 'lets-private-key' must exist", t: "ok" },
+          { c: "[reconcile] actual:  Secret 'lets-private-key' NOT FOUND in default ns", t: "warn" },
+          { c: "[reconcile] action:  generate ECDSA-P256 → create Secret", t: "ok" },
+          { c: "[reconcile] action:  ACME registration → store account URL in status.accountURL", t: "ok" },
+          { c: "[reconcile] result:  ctrl.Result{Requeue: false}", t: "hl" },
+          { c: "$ # 한 reconcile은 idempotent — 다시 호출돼도 같은 결과", t: "dim" }
+        ]},
+        { id: "t4", title: "Status update", lines: [
+          { c: "[reconcile] update CR status subresource", t: "ok" },
+          { c: "  status.conditions[0]: type=Ready, status=True, reason=Registered", t: "ok" },
+          { c: "  status.accountURL: https://acme-v02.../acct/12345", t: "ok" },
+          { c: "$ kubectl describe certissuer letsencrypt-prod | tail -8", t: "cmd" },
+          { c: "Status:", t: "ok" },
+          { c: "  Account URL:  https://acme-v02.../acct/12345", t: "ok" },
+          { c: "  Conditions:", t: "ok" },
+          { c: "    Last Transition Time:  2026-05-05T18:32:11Z", t: "ok" },
+          { c: "    Reason:                Registered", t: "ok" },
+          { c: "    Status:                True", t: "hl" },
+          { c: "    Type:                  Ready", t: "hl" }
+        ]},
+        { id: "t5", title: "Finalizer cleanup", lines: [
+          { c: "$ kubectl delete certissuer letsencrypt-prod", t: "cmd" },
+          { c: "[apiserver] DELETE → metadata.deletionTimestamp set, finalizer 'cert-issuer.example.io/cleanup' present", t: "warn" },
+          { c: "[reconcile] detected DeletionTimestamp → run cleanup logic", t: "dim" },
+          { c: "  ↳ ACME deactivate account ✓", t: "ok" },
+          { c: "  ↳ Secret 'lets-private-key' delete ✓", t: "ok" },
+          { c: "[reconcile] remove finalizer from CR", t: "ok" },
+          { c: "[apiserver] all finalizers gone → physical delete from etcd", t: "ok" },
+          { c: "certissuer.example.io \"letsencrypt-prod\" deleted", t: "hl" }
+        ]}
+      ]
+    }
+  };
+
+  /* Engine: per-lab tab switch + typing */
+  function classFor(t) {
+    if (t === "cmd") return "cmd";
+    if (t === "ok") return "ok";
+    if (t === "warn") return "warn";
+    if (t === "err") return "err";
+    if (t === "hl") return "hl";
+    if (t === "dim") return "dim";
+    return "";
+  }
+
+  document.querySelectorAll(".klab[data-lab]").forEach(function (root) {
+    var labId = root.dataset.lab;
+    var script = SCRIPTS[labId];
+    if (!script) return;
+    var tabsEl = root.querySelector(".klab-tabs");
+    var bodyEl = root.querySelector(".klab-body");
+    var statusEl = root.querySelector(".klab-status");
+    var runBtn = root.querySelector("[data-act='run']");
+    var clearBtn = root.querySelector("[data-act='clear']");
+    var speedBtn = root.querySelector("[data-act='speed']");
+    if (!tabsEl || !bodyEl) return;
+
+    var active = script.tabs[0].id;
+    var typing = false;
+    var token = 0;
+    var speed = 1; // 1 / 2 / 4
+
+    function setActive(id) {
+      active = id;
+      tabsEl.querySelectorAll(".klab-tab").forEach(function (b) {
+        b.setAttribute("aria-selected", b.dataset.tab === id ? "true" : "false");
+      });
+      bodyEl.innerHTML = "";
+      if (statusEl) statusEl.textContent = "tab \"" + id + "\" — idle · press Run";
+    }
+    tabsEl.querySelectorAll(".klab-tab").forEach(function (b) {
+      b.addEventListener("click", function () { setActive(b.dataset.tab); token++; typing = false; });
+    });
+
+    function typeLine(line, tk) {
+      return new Promise(function (resolve) {
+        var div = document.createElement("div");
+        div.className = classFor(line.t);
+        bodyEl.appendChild(div);
+        var text = line.c;
+        var fast = line.t !== "cmd";
+        var interval = (fast ? 4 : 14) / speed;
+        var step = fast ? 16 : 1;
+        var i = 0;
+        function tick() {
+          if (tk !== token) { resolve(); return; }
+          if (i >= text.length) { div.textContent = text; resolve(); return; }
+          i = Math.min(text.length, i + step);
+          div.textContent = text.slice(0, i);
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+          setTimeout(tick, interval);
+        }
+        tick();
+      });
+    }
+
+    function run() {
+      if (typing) return;
+      typing = true;
+      token++;
+      var tk = token;
+      bodyEl.innerHTML = "";
+      if (statusEl) statusEl.textContent = "running \"" + active + "\" …";
+      var tab = script.tabs.find(function (t) { return t.id === active; });
+      if (!tab) { typing = false; return; }
+      (function loop(idx) {
+        if (tk !== token || idx >= tab.lines.length) {
+          if (tk === token && statusEl) statusEl.textContent = "done — \"" + active + "\" · " + tab.lines.length + " lines";
+          typing = false;
+          // Trophy stamp (lab completed)
+          if (tk === token) {
+            try {
+              var k = "k8s.v3.lab." + labId;
+              var seen = localStorage.getItem(k) || "";
+              var setSeen = new Set(seen.split(",").filter(Boolean));
+              setSeen.add(active);
+              localStorage.setItem(k, Array.from(setSeen).join(","));
+              if (setSeen.size === script.tabs.length && !localStorage.getItem(k + ".trophy")) {
+                localStorage.setItem(k + ".trophy", "1");
+                showLabToast(labId, script.label);
+              }
+            } catch (e) {}
+          }
+          return;
+        }
+        typeLine(tab.lines[idx], tk).then(function () {
+          if (tk !== token) return;
+          setTimeout(function () { loop(idx + 1); }, (tab.lines[idx].t === "cmd" ? 220 : 60) / speed);
+        });
+      })(0);
+    }
+    function clear() {
+      token++; typing = false;
+      bodyEl.innerHTML = "";
+      if (statusEl) statusEl.textContent = "cleared · \"" + active + "\"";
+    }
+    if (runBtn) runBtn.addEventListener("click", run);
+    if (clearBtn) clearBtn.addEventListener("click", clear);
+    if (speedBtn) speedBtn.addEventListener("click", function () {
+      speed = speed >= 4 ? 1 : speed * 2;
+      speedBtn.textContent = "Speed ×" + speed;
+    });
+
+    setActive(active);
+  });
+
+  function showLabToast(id, label) {
+    var tray = document.getElementById("toastTray");
+    if (!tray) return;
+    var t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = '<div class="t-eyebrow">🏎️ PIT LANE LAB CLEAR</div>'+
+                  '<div class="t-title">' + label + '</div>'+
+                  '<div class="t-body">Lab ' + id + ' 모든 탭 완주 · 트로피 획득</div>';
+    tray.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add("in"); });
+    setTimeout(function () {
+      t.classList.remove("in");
+      setTimeout(function () { t.remove(); }, 320);
+    }, 3600);
+  }
+
+  document.documentElement.classList.add("v3-labs-ready");
+})();
+
+/* =======================================================================
+ * v3 INTERACTIVE WIDGETS
+ *  - Scheduler Sandbox  (#widget-scheduler)
+ *  - Resource Calculator (#widget-qos)
+ *  - NetworkPolicy Visualizer (#widget-netpol)
+ *  - RBAC Path Finder (#widget-rbac)
+ * ======================================================================= */
+(function () {
+  "use strict";
+
+  /* --- Scheduler Sandbox --- */
+  (function schedulerSandbox(){
+    var root = document.getElementById("widget-scheduler");
+    if (!root) return;
+    var nodes = [
+      { name: "node-1", cpu: 4, mem: 8, taint: "", label: "zone=a" },
+      { name: "node-2", cpu: 8, mem: 16, taint: "", label: "zone=b" },
+      { name: "node-3", cpu: 2, mem: 4, taint: "NoSchedule", label: "zone=c" }
+    ];
+    var pod = { cpuReq: 2, memReq: 4, affinity: "any", toleration: false };
+    var nodesEl = root.querySelector("[data-nodes]");
+    var podEl = root.querySelector("[data-pod]");
+    var outEl = root.querySelector(".k8w-out");
+
+    function paintNodes(){
+      nodesEl.innerHTML = nodes.map(function(n, i){
+        return '<div class="k8w-card" data-i="'+i+'">'+
+          '<h6>'+n.name+'</h6>'+
+          '<label>CPU '+n.cpu+'c</label><input type="range" min="1" max="16" value="'+n.cpu+'" data-fld="cpu" data-i="'+i+'">'+
+          '<label>Memory '+n.mem+'Gi</label><input type="range" min="1" max="32" value="'+n.mem+'" data-fld="mem" data-i="'+i+'">'+
+          '<label>Taint</label><select data-fld="taint" data-i="'+i+'">'+
+            '<option value=""'+(n.taint===""?" selected":"")+'>none</option>'+
+            '<option value="NoSchedule"'+(n.taint==="NoSchedule"?" selected":"")+'>NoSchedule</option>'+
+          '</select>'+
+          '<label>Label</label><input type="text" value="'+n.label+'" data-fld="label" data-i="'+i+'">'+
+        '</div>';
+      }).join("");
+    }
+    function paintPod(){
+      podEl.innerHTML = '<div class="k8w-card hot">'+
+        '<h6>Pending Pod</h6>'+
+        '<label>CPU req '+pod.cpuReq+'c</label><input type="range" min="1" max="16" value="'+pod.cpuReq+'" data-pf="cpuReq">'+
+        '<label>Memory req '+pod.memReq+'Gi</label><input type="range" min="1" max="32" value="'+pod.memReq+'" data-pf="memReq">'+
+        '<label>NodeAffinity zone</label><select data-pf="affinity">'+
+          '<option value="any"'+(pod.affinity==="any"?" selected":"")+'>any</option>'+
+          '<option value="zone=a"'+(pod.affinity==="zone=a"?" selected":"")+'>zone=a</option>'+
+          '<option value="zone=b"'+(pod.affinity==="zone=b"?" selected":"")+'>zone=b</option>'+
+          '<option value="zone=c"'+(pod.affinity==="zone=c"?" selected":"")+'>zone=c</option>'+
+        '</select>'+
+        '<label><input type="checkbox" '+(pod.toleration?"checked":"")+' data-pf="toleration"> NoSchedule toleration</label>'+
+      '</div>';
+    }
+    paintNodes(); paintPod();
+
+    nodesEl.addEventListener("input", function(e){
+      var i = +e.target.dataset.i; var f = e.target.dataset.fld;
+      if (i===undefined||!f) return;
+      var v = e.target.value;
+      if (f==="cpu"||f==="mem") nodes[i][f] = +v;
+      else nodes[i][f] = v;
+      paintNodes();
+    });
+    podEl.addEventListener("input", function(e){
+      var f = e.target.dataset.pf; if (!f) return;
+      if (f==="toleration") pod.toleration = e.target.checked;
+      else if (f==="affinity") pod.affinity = e.target.value;
+      else pod[f] = +e.target.value;
+      paintPod();
+    });
+
+    root.querySelector(".k8w-go").addEventListener("click", function(){
+      var lines = [];
+      lines.push("<b>Filter 단계 — 술어별 통과/탈락</b>");
+      var passed = [];
+      nodes.forEach(function(n){
+        var fail = [];
+        if (n.cpu < pod.cpuReq) fail.push("Resources(cpu "+pod.cpuReq+">"+n.cpu+")");
+        if (n.mem < pod.memReq) fail.push("Resources(mem "+pod.memReq+">"+n.mem+")");
+        if (n.taint && !pod.toleration) fail.push("Taint("+n.taint+", no toleration)");
+        if (pod.affinity !== "any" && n.label !== pod.affinity) fail.push("NodeAffinity("+pod.affinity+" required)");
+        if (fail.length) lines.push("  <span class=\"k8w-tag bad\">FAIL</span> "+n.name+" — "+fail.join(", "));
+        else { lines.push("  <span class=\"k8w-tag ok\">PASS</span> "+n.name); passed.push(n); }
+      });
+      if (passed.length === 0) {
+        lines.push("");
+        lines.push("<b>결과</b>");
+        lines.push("  <span class=\"k8w-tag bad\">UNSCHEDULABLE</span> — Filter 통과한 노드 없음. Pending 유지.");
+        lines.push("  → Preemption 시도하거나 노드 추가 필요.");
+      } else {
+        lines.push("");
+        lines.push("<b>Score 단계 — 점수 합산</b>");
+        var best = null, bestScore = -1;
+        passed.forEach(function(n){
+          var leastAlloc = Math.round(((n.cpu - pod.cpuReq)/n.cpu + (n.mem - pod.memReq)/n.mem) * 50);
+          var balanced = 100 - Math.abs(((n.cpu - pod.cpuReq)/n.cpu - (n.mem - pod.memReq)/n.mem)) * 50;
+          var image = n.label === pod.affinity ? 100 : 50;
+          var sum = leastAlloc + balanced + image;
+          lines.push("  "+n.name+":  LeastAlloc "+leastAlloc+"  +  Balanced "+Math.round(balanced)+"  +  Image "+image+"  =  <b>"+Math.round(sum)+"</b>");
+          if (sum > bestScore) { bestScore = sum; best = n; }
+        });
+        lines.push("");
+        lines.push("<b>Bind</b>");
+        lines.push("  <span class=\"k8w-tag ok\">SCHEDULED</span> Pod → "+best.name+" (점수 "+Math.round(bestScore)+")");
+      }
+      outEl.innerHTML = lines.join("\n");
+    });
+  })();
+
+  /* --- Resource Calculator --- */
+  (function resourceCalc(){
+    var root = document.getElementById("widget-qos");
+    if (!root) return;
+    var conts = [
+      { name: "app", cr: 100, cl: 200, mr: 256, ml: 512 },
+      { name: "sidecar", cr: 50, cl: 100, mr: 128, ml: 256 },
+      { name: "init", cr: 50, cl: 50, mr: 64, ml: 64 }
+    ];
+    var grid = root.querySelector("[data-conts]");
+    var outEl = root.querySelector(".k8w-out");
+
+    function paint(){
+      grid.innerHTML = conts.map(function(c, i){
+        return '<div class="k8w-card"><h6>'+c.name+'</h6>'+
+          '<label>cpu req (m)</label><input type="number" value="'+c.cr+'" min="0" max="2000" data-cf="cr" data-i="'+i+'">'+
+          '<label>cpu limit (m)</label><input type="number" value="'+c.cl+'" min="0" max="2000" data-cf="cl" data-i="'+i+'">'+
+          '<label>mem req (Mi)</label><input type="number" value="'+c.mr+'" min="0" max="4096" data-cf="mr" data-i="'+i+'">'+
+          '<label>mem limit (Mi)</label><input type="number" value="'+c.ml+'" min="0" max="4096" data-cf="ml" data-i="'+i+'">'+
+        '</div>';
+      }).join("");
+    }
+    paint();
+    grid.addEventListener("input", function(e){
+      var i = +e.target.dataset.i; var f = e.target.dataset.cf;
+      if (i===undefined||!f) return;
+      conts[i][f] = +e.target.value || 0;
+    });
+
+    function classify(c){
+      if (c.cr === 0 && c.cl === 0 && c.mr === 0 && c.ml === 0) return "BestEffort";
+      if (c.cr === c.cl && c.mr === c.ml && c.cr > 0 && c.mr > 0) return "Guaranteed";
+      return "Burstable";
+    }
+
+    root.querySelector(".k8w-go").addEventListener("click", function(){
+      var lines = [];
+      lines.push("<b>컨테이너별 QoS</b>");
+      var classes = conts.map(classify);
+      conts.forEach(function(c, i){
+        var cls = classes[i];
+        var tag = cls === "Guaranteed" ? "ok" : cls === "Burstable" ? "warn" : "bad";
+        lines.push("  <span class=\"k8w-tag "+tag+"\">"+cls+"</span> "+c.name+
+          "  cpu "+c.cr+"m/"+c.cl+"m · mem "+c.mr+"Mi/"+c.ml+"Mi");
+      });
+      // Pod-level QoS = worst of containers (per K8s rule: all containers must be Guaranteed → Pod Guaranteed; any has request → Burstable; none → BestEffort)
+      var podQos;
+      if (classes.every(function(c){ return c === "Guaranteed"; })) podQos = "Guaranteed";
+      else if (classes.every(function(c){ return c === "BestEffort"; })) podQos = "BestEffort";
+      else podQos = "Burstable";
+      lines.push("");
+      lines.push("<b>Pod-level QoS</b>");
+      var podTag = podQos === "Guaranteed" ? "ok" : podQos === "Burstable" ? "warn" : "bad";
+      lines.push("  <span class=\"k8w-tag "+podTag+"\">"+podQos+"</span>");
+      lines.push("");
+      lines.push("<b>축출 우선순위 (메모리 압박 시)</b>");
+      lines.push("  1순위 (먼저 축출): BestEffort > Burstable(memory limit 초과) > Burstable(req 이내) > Guaranteed");
+      var rank = podQos === "BestEffort" ? "🔥 가장 먼저 축출됨" : podQos === "Burstable" ? "⚠️ memory.req 초과 시 축출" : "🛡️ 가장 보호됨";
+      lines.push("  현재 Pod: "+rank);
+      lines.push("");
+      lines.push("<b>OOMScore 추정 (mem.req / node.cap × 1000)</b>");
+      conts.forEach(function(c){
+        var nodeCap = 8192;
+        var oomScore = Math.round(c.mr / nodeCap * 1000);
+        lines.push("  "+c.name+": ~"+oomScore+" (높을수록 OOM killer 타깃)");
+      });
+      outEl.innerHTML = lines.join("\n");
+    });
+  })();
+
+  /* --- NetworkPolicy Visualizer --- */
+  (function netpolViz(){
+    var root = document.getElementById("widget-netpol");
+    if (!root) return;
+    var pods = [
+      { ns: "default", name: "frontend", labels: { app: "frontend" } },
+      { ns: "default", name: "backend",  labels: { app: "backend" } },
+      { ns: "default", name: "db",       labels: { app: "db", tier: "data" } },
+      { ns: "monitor", name: "prom",     labels: { app: "prom" } },
+      { ns: "monitor", name: "grafana",  labels: { app: "grafana" } },
+      { ns: "tools",   name: "ci",       labels: { app: "ci" } }
+    ];
+    var np = { target: "app=db", from: "app=backend", port: 5432 };
+    var preset = root.querySelector("[data-preset]");
+    var inputs = root.querySelector("[data-inputs]");
+    var grid = root.querySelector("[data-grid]");
+    var outEl = root.querySelector(".k8w-out");
+
+    function paintInputs(){
+      inputs.innerHTML =
+        '<div class="k8w-card"><h6>NetworkPolicy</h6>'+
+        '<label>target podSelector</label><input type="text" value="'+np.target+'" data-nf="target" placeholder="app=db">'+
+        '<label>from podSelector</label><input type="text" value="'+np.from+'" data-nf="from" placeholder="app=backend">'+
+        '<label>ingress port</label><input type="number" value="'+np.port+'" data-nf="port" min="0" max="65535">'+
+        '</div>';
+    }
+    paintInputs();
+    inputs.addEventListener("input", function(e){
+      var f = e.target.dataset.nf;
+      if (!f) return;
+      np[f] = f === "port" ? +e.target.value : e.target.value;
+    });
+
+    preset.addEventListener("click", function(){
+      np = { target: "app=db", from: "app=backend", port: 5432 };
+      paintInputs();
+      apply();
+    });
+
+    function matches(labels, selector){
+      if (!selector) return true;
+      var p = selector.split("=");
+      if (p.length !== 2) return false;
+      return labels[p[0]] === p[1];
+    }
+
+    function apply(){
+      var targets = pods.filter(function(p){ return matches(p.labels, np.target); });
+      var sources = pods.filter(function(p){ return matches(p.labels, np.from); });
+
+      grid.innerHTML = pods.map(function(p, i){
+        var role = "";
+        if (targets.indexOf(p) >= 0) role = "hot";
+        else if (sources.indexOf(p) >= 0) role = "info";
+        return '<div class="k8w-card '+role+'" style="text-align:center;">'+
+          '<h6>'+p.ns+'</h6>'+
+          '<div style="font-size:14px; font-weight:700; color:var(--ink);">'+p.name+'</div>'+
+          '<div style="font-size:10px; color:var(--ink-muted); margin-top:4px;">'+
+            Object.keys(p.labels).map(function(k){ return k+'='+p.labels[k]; }).join(' · ')+
+          '</div>'+
+          (targets.indexOf(p)>=0?'<div style="font-size:9px; color:var(--rosso-bright); margin-top:4px;">▼ TARGET</div>':'')+
+          (sources.indexOf(p)>=0?'<div style="font-size:9px; color:var(--info); margin-top:4px;">▲ SOURCE</div>':'')+
+        '</div>';
+      }).join("");
+
+      var lines = [];
+      lines.push("<b>적용된 NetworkPolicy</b>");
+      lines.push("  target: <span class=\"k8w-tag bad\">"+np.target+"</span> "+targets.length+" pod");
+      lines.push("  ingress from: <span class=\"k8w-tag info\">"+np.from+"</span> "+sources.length+" pod, port "+np.port);
+      lines.push("");
+      lines.push("<b>연결 매트릭스 (default-deny + 위 NP만 허용)</b>");
+      pods.forEach(function(src){
+        pods.forEach(function(dst){
+          if (src === dst) return;
+          var isTarget = targets.indexOf(dst) >= 0;
+          if (!isTarget) {
+            // dst is not protected by NP → falls under default-deny if any NP applies, else allow
+            // For demo: targets are isolated; non-targets = always allowed (no NP applies to them)
+            return;
+          }
+          var allowed = sources.indexOf(src) >= 0;
+          var tag = allowed ? "<span class=\"k8w-tag ok\">ALLOW</span>" : "<span class=\"k8w-tag bad\">DENY</span>";
+          lines.push("  "+tag+" "+src.name+" → "+dst.name+":"+np.port);
+        });
+      });
+      lines.push("");
+      lines.push("<span class=\"dim\">tip · default-deny 모드에서는 명시 allow 외 모두 차단. ingress와 egress는 따로 정의.</span>");
+      outEl.innerHTML = lines.join("\n");
+    }
+
+    root.querySelector(".k8w-go").addEventListener("click", apply);
+    apply();  // initial render
+  })();
+
+  /* --- RBAC Path Finder --- */
+  (function rbacFinder(){
+    var root = document.getElementById("widget-rbac");
+    if (!root) return;
+    var subjects = [
+      { kind: "User", name: "alice", binding: "rb-dev-readonly" },
+      { kind: "User", name: "bob", binding: "rb-dev-readonly" },
+      { kind: "User", name: "admin", binding: "crb-cluster-admin" },
+      { kind: "ServiceAccount", name: "default:nginx", binding: "rb-pod-creator" },
+      { kind: "ServiceAccount", name: "monitor:prom", binding: "crb-prom-reader" },
+      { kind: "Group", name: "system:authenticated", binding: null }
+    ];
+    var bindings = {
+      "rb-dev-readonly": { kind: "RoleBinding", ns: "default", role: "r-readonly" },
+      "rb-pod-creator":  { kind: "RoleBinding", ns: "default", role: "r-pod-creator" },
+      "crb-cluster-admin": { kind: "ClusterRoleBinding", ns: null, role: "cr-cluster-admin" },
+      "crb-prom-reader":   { kind: "ClusterRoleBinding", ns: null, role: "cr-prom-reader" }
+    };
+    var roles = {
+      "r-readonly":     { rules: [{ verbs: ["get","list","watch"], resources: ["*"] }] },
+      "r-pod-creator":  { rules: [{ verbs: ["create","update","patch","delete"], resources: ["pods","pods/exec","pods/log"] },
+                                  { verbs: ["get","list","watch"],              resources: ["pods","configmaps","secrets"] }] },
+      "cr-cluster-admin": { rules: [{ verbs: ["*"], resources: ["*"], apiGroups: ["*"] }] },
+      "cr-prom-reader":   { rules: [{ verbs: ["get","list","watch"], resources: ["pods","services","endpoints","nodes/metrics"] }] }
+    };
+
+    var subjEl = root.querySelector("[data-subj]");
+    var verbEl = root.querySelector("[data-verb]");
+    var resEl = root.querySelector("[data-res]");
+    var nsEl = root.querySelector("[data-ns]");
+    var outEl = root.querySelector(".k8w-out");
+
+    subjEl.innerHTML = subjects.map(function(s, i){
+      return '<option value="'+i+'">'+s.kind+'/'+s.name+(s.binding?' (via '+s.binding+')':'')+'</option>';
+    }).join("");
+
+    function trace(){
+      var sIdx = +subjEl.value;
+      var subj = subjects[sIdx];
+      var verb = verbEl.value;
+      var res = resEl.value;
+      var ns = nsEl.value || "default";
+      var lines = [];
+      lines.push("<b>요청</b>");
+      lines.push("  "+subj.kind+"/"+subj.name+" "+verb+" "+res+" -n "+ns);
+      lines.push("");
+      lines.push("<b>매칭 검색</b>");
+      if (!subj.binding) {
+        lines.push("  <span class=\"k8w-tag bad\">DENY</span> Subject에 RoleBinding/ClusterRoleBinding 없음");
+        outEl.innerHTML = lines.join("\n");
+        return;
+      }
+      var b = bindings[subj.binding];
+      lines.push("  ↳ Binding: <span class=\"k8w-tag info\">"+b.kind+" "+subj.binding+"</span> ns="+(b.ns||"<all>"));
+      if (b.kind === "RoleBinding" && b.ns !== ns) {
+        lines.push("  <span class=\"k8w-tag bad\">DENY</span> RoleBinding의 namespace("+b.ns+") ≠ 요청("+ns+")");
+        outEl.innerHTML = lines.join("\n");
+        return;
+      }
+      lines.push("  ↳ Role: <span class=\"k8w-tag info\">"+b.role+"</span>");
+      var role = roles[b.role];
+      var allowed = false;
+      role.rules.forEach(function(r, i){
+        var verbMatch = r.verbs.indexOf("*") >= 0 || r.verbs.indexOf(verb) >= 0;
+        var resMatch = r.resources.indexOf("*") >= 0 || r.resources.indexOf(res) >= 0;
+        var tag = (verbMatch && resMatch) ? "ok" : "bad";
+        lines.push("  ↳ rule#"+(i+1)+": <span class=\"k8w-tag "+tag+"\">"+(verbMatch&&resMatch?"MATCH":"no match")+"</span> verbs=["+r.verbs.join(",")+"] resources=["+r.resources.join(",")+"]");
+        if (verbMatch && resMatch) allowed = true;
+      });
+      lines.push("");
+      lines.push("<b>최종 결정</b>");
+      lines.push("  "+(allowed
+        ? "<span class=\"k8w-tag ok\">ALLOW</span> 매칭 rule 1개 이상 발견"
+        : "<span class=\"k8w-tag bad\">DENY</span> 매칭 rule 없음"));
+      outEl.innerHTML = lines.join("\n");
+    }
+
+    root.querySelector(".k8w-go").addEventListener("click", trace);
+    trace(); // initial
+  })();
+
+  document.documentElement.classList.add("v3-widgets-ready");
+})();
 </body>
 </html>
